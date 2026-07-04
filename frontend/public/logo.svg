@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#d4754f"/>
+      <stop offset="100%" stop-color="#b85c3a"/>
+    </linearGradient>
+    <linearGradient id="flame" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#fdf6ed"/>
+      <stop offset="100%" stop-color="#ede0ce"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background rounded square -->
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+
+  <!-- Outer flame shape in warm cream -->
+  <path d="
+    M 256 72
+    C 310 130 390 230 368 330
+    C 352 395 310 428 256 428
+    C 202 428 160 395 144 330
+    C 122 230 202 130 256 72 Z
+  " fill="url(#flame)"/>
+
+  <!-- Inner flame cutout in terracotta (creates depth/hollow effect) -->
+  <path d="
+    M 256 205
+    C 282 242 298 286 292 324
+    C 286 356 275 376 256 376
+    C 237 376 226 356 220 324
+    C 214 286 230 242 256 205 Z
+  " fill="#cd6f4d"/>
+
+  <!-- Tiny inner glow dot -->
+  <ellipse cx="256" cy="360" rx="18" ry="12" fill="#f3ece1" opacity="0.55"/>
+</svg>
