@@ -126,8 +126,8 @@ export default function App() {
 
   const handleDiscardSession = guard(async (sessionId) => {
     await api.deleteSession(sessionId);
-    setActiveSession(null);
     await loadProject(activeProject.id);
+    setActiveSession(null);
   });
 
   const handleTimerFinish = ({ focusSeconds, pausedSeconds, methodData }) => {
@@ -154,8 +154,8 @@ export default function App() {
   };
 
   const finishBreak = guard(async () => {
-    setActiveSession(null);
     await loadProject(activeProject.id);
+    setActiveSession(null);
   });
 
   const renderView = () => {
