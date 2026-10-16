@@ -6,6 +6,12 @@ updates:
       - /frontend
     schedule:
       interval: weekly
+    # Große Versionssprünge (z. B. React 19, Express 5) brauchen meist Code-
+    # Anpassungen und werden bewusst von Hand gemacht; automatisch nur Minor/Patch
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
     groups:
       kleine-updates:
         update-types:
