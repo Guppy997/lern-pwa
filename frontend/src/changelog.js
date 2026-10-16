@@ -1,8 +1,21 @@
 // Manuell gepflegt — bei jedem sichtbaren Release hier oben einen neuen Eintrag
 // ergänzen und APP_VERSION (+ "version" in package.json) hochzählen.
-export const APP_VERSION = '1.4.1';
+export const APP_VERSION = '1.5.0';
 
 export const CHANGELOG = [
+  {
+    version: '1.5.0',
+    date: '2026-10-16',
+    notes: [
+      'Neu: Archiv — Projekte verschwinden vom Board, ihre Lernzeit zählt aber weiter in Lernkalender und Statistik. Wiederherstellen bringt sie in ihre alte Spalte zurück',
+      'Endgültig löschen geht nur noch aus dem Archiv heraus',
+      'Projekte stehen jetzt ganz oben, der Lernkalender darunter. Auf dem Handy sind "Pausiert" und "Abgeschlossen" eingeklappt',
+      'Statt der Pfeile ← → öffnet "⋯" auf jeder Karte die Aktionen: verschieben oder archivieren',
+      'Karten zeigen, wann du zuletzt an dem Projekt gelernt hast',
+      '"+ Neues Projekt" sitzt jetzt am Ende der Spalte "Aktiv"',
+      'Fix: Auf dem Handy war die Startseite breiter als der Bildschirm (wegen des Jahres-Lernkalenders). Jetzt scrollt nur noch der Kalender, und zwar direkt zum heutigen Tag'
+    ]
+  },
   {
     version: '1.4.1',
     date: '2026-10-16',

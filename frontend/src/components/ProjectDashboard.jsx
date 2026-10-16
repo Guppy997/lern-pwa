@@ -101,15 +101,11 @@ function HistoryItem({ session, expanded, onToggle, onDelete }) {
 
 export default function ProjectDashboard({
   project, dayPlan, dayPlans, sessions, totals,
-  onSavePlan, onPlanCompleted, onStart, onBack, onDelete, onResume, onDiscardSession
+  onSavePlan, onPlanCompleted, onStart, onBack, onArchive, onResume, onDiscardSession
 }) {
   const [showPlanForm, setShowPlanForm] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
   const [showAllHistory, setShowAllHistory] = useState(false);
-
-  const handleDelete = () => {
-    if (window.confirm(`"${project.name}" inkl. gesamtem Verlauf wirklich löschen?`)) onDelete(project);
-  };
 
   const openSession = sessions.find((s) => !s.ended_at);
   const finished = sessions.filter((s) => s.ended_at);
@@ -152,7 +148,8 @@ export default function ProjectDashboard({
     <div className="card">
       <div className="dashboard-top">
         <button className="link-back" onClick={onBack}>← Alle Projekte</button>
-        <button className="link danger" onClick={handleDelete}>Projekt löschen</button>
+        {/* Ohne Rückfrage: Archivieren ist auf dem Board jederzeit umkehrbar */}
+        <button className="link" onClick={() => onArchive(project)}>Archivieren</button>
       </div>
       <h1>{project.name}</h1>
       <p className="subtitle">

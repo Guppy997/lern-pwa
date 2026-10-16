@@ -26,6 +26,8 @@ export const api = {
   createProject: (name) => request('/projects', { method: 'POST', body: JSON.stringify({ name }) }),
   setProjectStatus: (id, status) =>
     request(`/projects/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+  setProjectArchived: (id, archived) =>
+    request(`/projects/${id}`, { method: 'PATCH', body: JSON.stringify({ archived }) }),
   deleteProject: (id) => request(`/projects/${id}`, { method: 'DELETE' }),
   getProject: (id) => request(`/projects/${id}`),
   getStats: (period, offset = 0) => request(`/stats?period=${period}&offset=${offset}`),

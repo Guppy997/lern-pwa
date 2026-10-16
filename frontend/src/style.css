@@ -48,6 +48,11 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* #root ist das Flex-Element von body: ohne min-width: 0 wird es mindestens so
+   breit wie sein breitester Inhalt (Jahres-Lernkalender, ~780 px) und die ganze
+   Seite läuft auf dem Handy seitlich über, statt dass nur der Kalender scrollt */
+#root { min-width: 0; }
+
 button, a {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -84,13 +89,6 @@ button, a {
   }
   h1 { font-size: 1.4rem; }
   .ring-time { font-size: 2.2rem; }
-
-  /* Die drei gestapelten Kanban-Move-Buttons (←/→/✕) waren bei geteilter
-     Kartenhöhe nur ~20px hoch — auf dem Handy praktisch nicht treffbar */
-  .project-card-move .ghost {
-    min-height: 40px;
-    padding: 0 14px;
-  }
   .period-nav-label {
     min-width: 140px;
     font-size: 0.92rem;
@@ -299,6 +297,9 @@ button.danger:hover { color: #93362b; }
   flex-direction: column;
   gap: 24px;
   margin: auto;
+  /* Platz für das fixierte Versions-Badge unten links (.app-footer), sonst
+     verdeckt es beim Runterscrollen den letzten Eintrag (Archiv) */
+  padding-bottom: 44px;
   animation: rise 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .board-header {
@@ -354,9 +355,10 @@ button.danger:hover { color: #93362b; }
 .notif-banner button { white-space: nowrap; }
 .new-project {
   display: flex;
+  flex-direction: column;
   gap: 10px;
 }
-.new-project input { flex: 1; }
+.new-project-toggle { margin-top: 2px; }
 /* Contribution-Heatmap (GitHub-Stil) */
 .heatmap-card {
   background: rgba(255, 252, 247, 0.6);
@@ -457,20 +459,41 @@ button.danger:hover { color: #93362b; }
   font-weight: 600;
   color: var(--text-soft);
 }
+.board-column.collapsed { min-height: 0; }
 .board-column-cards { display: flex; flex-direction: column; gap: 10px; }
 .empty-hint { color: var(--muted); font-size: 0.85rem; margin: 0; font-style: italic; }
+
+/* Einklappbare Überschrift (Pausiert/Abgeschlossen/Archiv) — sieht aus wie
+   die normale Spaltenüberschrift, nur mit Pfeil und Anzahl */
+.column-toggle {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  min-height: 32px;
+  color: inherit;
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-align: left;
+}
+.column-toggle:hover { background: transparent; color: var(--accent-strong); }
+.column-toggle-icon { font-style: normal; font-size: 0.8em; width: 1em; }
+.column-count { font-style: normal; font-weight: 500; font-size: 0.9em; color: var(--muted); }
 
 .project-card {
   background: var(--surface);
   border: 1px solid var(--border-soft);
   border-radius: 14px;
-  display: flex;
-  align-items: stretch;
   overflow: hidden;
   transition: border-color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
   box-shadow: 0 8px 20px -16px rgba(89, 68, 50, 0.4);
 }
 .project-card:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow-soft); }
+.project-card.menu-open { border-color: var(--accent); }
+.project-card-row { display: flex; align-items: stretch; }
 .project-card-main {
   flex: 1;
   background: transparent;
@@ -487,24 +510,59 @@ button.danger:hover { color: #93362b; }
 }
 .project-card-main:hover { background: var(--accent-soft); color: var(--text); }
 .project-card-stats { font-size: 0.8rem; color: var(--muted); font-weight: 400; }
-.project-card-move {
-  display: flex;
-  flex-direction: column;
-  border-left: 1px solid var(--border-soft);
-}
-.project-card-move .ghost {
-  flex: 1;
+.project-card-toggle {
   background: transparent;
   border: none;
+  border-left: 1px solid var(--border-soft);
   border-radius: 0;
-  color: var(--muted);
-  padding: 0 12px;
-  font-size: 0.9rem;
   box-shadow: none;
+  color: var(--muted);
+  padding: 0 14px;
+  min-width: 52px; /* gut treffbar auf dem Handy */
+  font-size: 1.1rem;
 }
-.project-card-move .ghost:hover { color: var(--accent-strong); background: var(--accent-soft); }
-.project-card-move .ghost:disabled { opacity: 0.25; }
-.project-card-move .ghost.danger:hover { color: #b6483a; background: rgba(182, 72, 58, 0.1); }
+.project-card-toggle:hover,
+.project-card.menu-open .project-card-toggle { color: var(--accent-strong); background: var(--accent-soft); }
+.project-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--border-soft);
+}
+.project-card-actions button {
+  flex: 1 1 auto;
+  min-height: 40px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+
+/* Archiv: unter dem Lernkalender, standardmäßig eingeklappt */
+.board-archive { display: flex; flex-direction: column; gap: 12px; }
+.board-archive > .column-toggle {
+  align-self: flex-start;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+.board-archive > .column-toggle:hover { color: var(--accent-strong); }
+.archive-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.archive-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  background: rgba(255, 252, 247, 0.6);
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  padding: 12px 16px;
+}
+.archive-item-text { display: flex; flex-direction: column; gap: 4px; color: var(--text-soft); }
+.archive-item-actions { display: flex; align-items: center; gap: 16px; }
+.archive-item-actions .secondary { padding: 8px 14px; font-size: 0.85rem; }
 
 /* Project dashboard */
 .link-back {

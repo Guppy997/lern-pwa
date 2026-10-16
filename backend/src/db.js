@@ -56,6 +56,7 @@ const addColumnIfMissing = (table, column, definition) => {
 addColumnIfMissing('sessions', 'recall_text', 'TEXT');
 addColumnIfMissing('sessions', 'focus_seconds', 'INTEGER');
 addColumnIfMissing('day_plans', 'completed_at', 'TEXT');
+addColumnIfMissing('projects', 'archived_at', 'TEXT');
 
 db.exec(`
   CREATE INDEX IF NOT EXISTS idx_sessions_project_id ON sessions(project_id);

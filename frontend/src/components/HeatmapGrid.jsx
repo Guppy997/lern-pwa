@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { formatDuration } from '../constants.js';
 
 const WEEKDAY_LABELS = ['Mo', '', 'Mi', '', 'Fr', '', ''];
@@ -51,13 +51,25 @@ function monthLabels(columns) {
 // bei einem einzelnen Monat/einer Woche (Statistik-Seite) ist das nicht nötig.
 export default function HeatmapGrid({ days, groupByMonth = false, showMonthLabels = true }) {
   const [selected, setSelected] = useState(null);
+  const scrollRef = useRef(null);
+
+  // Passt das Raster nicht in die Breite (ganzes Jahr auf dem Handy), den
+  // heutigen Tag in die Mitte scrollen — sonst sieht man nur Januar bis Juni.
+  // Nur horizontal im Kalender, die Seite selbst springt dabei nicht.
+  useEffect(() => {
+    const scroller = scrollRef.current;
+    const todayCell = scroller?.querySelector(`[data-date="${new Date().toLocaleDateString('sv-SE')}"]`);
+    if (!todayCell || scroller.scrollWidth <= scroller.clientWidth) return;
+    const offset = todayCell.getBoundingClientRect().left - scroller.getBoundingClientRect().left;
+    scroller.scrollLeft += offset - scroller.clientWidth / 2;
+  }, [days]);
 
   const columns = toColumns(days);
   const labels = monthLabels(columns);
 
   return (
     <>
-      <div className="heatmap-scroll">
+      <div className="heatmap-scroll" ref={scrollRef}>
         <div className="heatmap-grid">
           <div className="heatmap-weekday-labels">
             {WEEKDAY_LABELS.map((label, i) => (
@@ -77,6 +89,7 @@ export default function HeatmapGrid({ days, groupByMonth = false, showMonthLabel
                       <button
                         type="button"
                         key={j}
+                        data-date={cell.date}
                         className={`heatmap-cell level-${cell.level} ${selected?.date === cell.date ? 'selected' : ''}`}
                         title={`${cell.date} · ${formatDuration(cell.focus_seconds)}`}
                         onClick={() => setSelected(selected?.date === cell.date ? null : cell)}

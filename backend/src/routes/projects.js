@@ -29,7 +29,7 @@ const FOCUS_SECONDS_SQL = `
 router.get('/', (req, res) => {
   const projects = db
     .prepare(
-      `SELECT p.id, p.name, p.status, p.created_at,
+      `SELECT p.id, p.name, p.status, p.created_at, p.archived_at,
               COUNT(s.id) FILTER (WHERE s.ended_at IS NOT NULL) AS session_count,
               CAST(${FOCUS_SECONDS_SQL} AS INTEGER) AS focus_seconds,
               MAX(s.started_at) AS last_active
@@ -56,22 +56,48 @@ router.post('/', (req, res) => {
     res.status(201).json({ project });
   } catch (err) {
     if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-      return res.status(409).json({ error: 'Ein Projekt mit diesem Namen existiert bereits' });
+      // Archivierte Projekte sind auf dem Board unsichtbar — ohne den Hinweis
+      // wäre unklar, wo das "bereits existierende" Projekt steckt
+      const existing = db.prepare('SELECT archived_at FROM projects WHERE name = ?').get(name.trim());
+      return res.status(409).json({
+        error: existing?.archived_at
+          ? 'Ein Projekt mit diesem Namen liegt im Archiv — stell es von dort wieder her'
+          : 'Ein Projekt mit diesem Namen existiert bereits'
+      });
     }
     throw err;
   }
 });
 
 // PATCH /api/projects/:id -> move between board columns (active/paused/done)
+// and/or archive/restore. Archiv ist ein eigenes Feld statt eines weiteren
+// Status, damit Wiederherstellen das Projekt in seine alte Spalte zurückbringt.
 router.patch('/:id', (req, res) => {
-  const { status } = req.body;
-  if (!['active', 'paused', 'done'].includes(status)) {
+  const { status, archived } = req.body;
+  if (status === undefined && archived === undefined) {
+    return res.status(400).json({ error: 'status oder archived ist erforderlich' });
+  }
+  if (status !== undefined && !['active', 'paused', 'done'].includes(status)) {
     return res.status(400).json({ error: 'Ungültiger Status' });
   }
-  db.prepare('UPDATE projects SET status = ? WHERE id = ?').run(status, req.params.id);
+  if (archived !== undefined && typeof archived !== 'boolean') {
+    return res.status(400).json({ error: 'archived muss true oder false sein' });
+  }
+
   const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id);
   if (!project) return res.status(404).json({ error: 'Projekt nicht gefunden' });
-  res.json({ project });
+
+  if (status !== undefined) {
+    db.prepare('UPDATE projects SET status = ? WHERE id = ?').run(status, project.id);
+  }
+  if (archived !== undefined) {
+    db.prepare(
+      `UPDATE projects SET archived_at = ${archived ? "datetime('now')" : 'NULL'} WHERE id = ?`
+    ).run(project.id);
+  }
+
+  const updated = db.prepare('SELECT * FROM projects WHERE id = ?').get(project.id);
+  res.json({ project: updated });
 });
 
 // DELETE /api/projects/:id -> remove project with its plans and sessions

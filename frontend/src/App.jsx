@@ -71,6 +71,19 @@ export default function App() {
     await loadBoard();
   });
 
+  // Archivieren ist der normale Weg zum Aufräumen: Projekt verschwindet vom
+  // Board, Sessions zählen aber weiter in Lernkalender und Statistik
+  const handleArchiveProject = guard(async (project) => {
+    await api.setProjectArchived(project.id, true);
+    await loadBoard();
+  });
+
+  const handleRestoreProject = guard(async (project) => {
+    await api.setProjectArchived(project.id, false);
+    await loadBoard();
+  });
+
+  // Nur noch aus dem Archiv erreichbar — löscht auch den gesamten Verlauf
   const handleDeleteProject = guard(async (project) => {
     await api.deleteProject(project.id);
     await loadBoard();
@@ -181,6 +194,8 @@ export default function App() {
           projects={projects}
           onOpen={guard((p) => loadProject(p.id))}
           onMove={handleMoveProject}
+          onArchive={handleArchiveProject}
+          onRestore={handleRestoreProject}
           onDelete={handleDeleteProject}
           onCreate={handleCreateProject}
           onShowStats={() => setView('stats')}
@@ -204,7 +219,7 @@ export default function App() {
           onPlanCompleted={handleDayPlanCompleted}
           onStart={handleStart}
           onBack={guard(loadBoard)}
-          onDelete={handleDeleteProject}
+          onArchive={handleArchiveProject}
           onResume={handleResume}
           onDiscardSession={handleDiscardSession}
         />
