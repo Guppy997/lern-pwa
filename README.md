@@ -1,12 +1,16 @@
 # Lern-PWA
 
-**Lern-Sessions** ist ein selbst gehosteter Lern-Tracker als installierbare Web-App. Pro Lernprojekt planst du deinen Tag, lernst in festen Fokus-Phasen und hältst danach fest, was hängengeblieben ist. Läuft komplett auf eigener Hardware (bei mir ein Raspberry Pi 5), ohne Konto und ohne Tracking.
-
-![MIT-Lizenz](https://img.shields.io/badge/Lizenz-MIT-cd6f4d)
+[![CI](https://github.com/Guppy997/lern-pwa/actions/workflows/ci.yml/badge.svg)](https://github.com/Guppy997/lern-pwa/actions/workflows/ci.yml)
+![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-cd6f4d)
 ![React 18](https://img.shields.io/badge/React-18-cd6f4d)
-![Node 24](https://img.shields.io/badge/Node-24-cd6f4d)
+![Node 22.12+](https://img.shields.io/badge/Node-22.12%2B-cd6f4d)
 ![SQLite](https://img.shields.io/badge/SQLite-WAL-cd6f4d)
 ![PWA](https://img.shields.io/badge/PWA-installierbar-cd6f4d)
+![16 Tests](https://img.shields.io/badge/Tests-16-cd6f4d)
+
+> **In short (English):** A self-hosted study tracker as an installable web app. Plan your day per study project, learn in timed focus sessions (25/5, 52/17 or custom), then write down what stuck (active recall) and rate your focus. Runs on your own hardware, no account, no tracking. The interface is in German.
+
+**Lern-Sessions** ist ein selbst gehosteter Lern-Tracker als installierbare Web-App. Pro Lernprojekt planst du deinen Tag, lernst in festen Fokus-Phasen und hältst danach fest, was hängengeblieben ist. Läuft komplett auf eigener Hardware (bei mir ein Raspberry Pi 5), ohne Konto und ohne Tracking.
 
 ![Projekt-Board mit 12-Monats-Lernkalender](docs/screenshots/board-desktop.png)
 
@@ -27,19 +31,25 @@
 
 ## Inhalt
 
+- [Im Einsatz](#im-einsatz)
 - [So funktioniert's](#so-funktionierts)
 - [Funktionen](#funktionen)
 - [Architektur](#architektur)
+- [Sicherheit und Datenschutz](#sicherheit-und-datenschutz)
 - [Selbst hosten](#selbst-hosten)
 - [Backup und Wiederherstellung](#backup-und-wiederherstellung)
 - [Entwicklung](#entwicklung)
-- [Releases und Updates](#releases-und-updates)
-- [Versionen](#versionen)
+- [Releases und Versionen](#releases-und-versionen)
 - [Projektstruktur](#projektstruktur)
 - [API](#api)
 - [Datenmodell](#datenmodell)
 - [Grenzen und Ideen](#grenzen-und-ideen)
+- [Entstehung](#entstehung)
 - [Lizenz](#lizenz)
+
+## Im Einsatz
+
+Die App läuft seit Version 1.0.0 im Juni 2026 auf meinem Raspberry Pi 5 und ist dort für mein eigenes Lernen in Benutzung. Archiv, Lernkalender mit Zeitraum-Filter und die Statistik nach Projekt und Bewertung sind aus dieser Nutzung entstanden.
 
 ## So funktioniert's
 
@@ -55,8 +65,7 @@ flowchart LR
 
 1. **Planen:** Für jedes Lernprojekt legst du fest, was heute dran ist, mit welchem Zeitsystem du lernst und wie viele Sessions du schaffen willst.
 2. **Lernen:** Der Timer zählt die Fokuszeit herunter. Pausieren geht jederzeit, am Ende kommen Signalton und Benachrichtigung.
-3. **Reflektieren:** Direkt danach schreibst du aus dem Kopf auf, was hängengeblieben ist (Active Recall), und bewertest, wie konzentriert du warst.
-4. **Überblick:** Lernkalender und Statistik zeigen, wann, wie lange, wofür und wie gut du gelernt hast.
+3. **Reflektieren:** Direkt danach schreibst du aus dem Kopf auf, was hängengeblieben ist (Active Recall), und bewertest, wie konzentriert du warst. Lernkalender und Statistik zeigen später, wann, wie lange, wofür und wie gut du gelernt hast.
 
 ## Funktionen
 
@@ -114,8 +123,21 @@ flowchart TB
 | Datenbank | SQLite im WAL-Modus, Foreign Keys an, Schema-Migrationen beim Start (`backend/src/db.js`) |
 | Betrieb | Docker Compose, beide Container non-root, mit Healthchecks und Ressourcen-Limits |
 | Zugriff | Tailscale-Sidecar mit eigenem Hostnamen und HTTPS-Zertifikat, oder lokal über `127.0.0.1:8090` |
+| Tests und CI | Vitest und Supertest für die API, GitHub Actions mit Node 22 und 24, Dependabot |
 
 Das Backend ist nie direkt erreichbar, nur über den nginx-Proxy im Frontend-Container. Dadurch laufen alle Anfragen über denselben Origin, und das Backend braucht kein CORS.
+
+## Sicherheit und Datenschutz
+
+- **Daten bleiben auf eigener Hardware:** Alles liegt in einer SQLite-Datei auf dem eigenen Server. Kein Konto, keine Cookies, keine Analyse-Tools.
+- **Keine Anmeldung:** Die App ist für eine Person gebaut. Geschützt wird sie über das Netz: Der Port ist nur an `127.0.0.1` gebunden, von außen geht es nur über Tailscale.
+- **Eine fremde Anfrage:** Die Schriften kommen noch von Google Fonts. Sonst spricht die App nur mit dem eigenen Server.
+- **Backend abgeschirmt:** Erreichbar nur über den nginx-Proxy im Frontend-Container, nie direkt.
+- **SQL** ausschließlich mit Platzhaltern, Eingaben werden serverseitig geprüft (zum Beispiel Bewertung 1–5, Fokuszeit höchstens die geplante Dauer).
+- **Container** laufen ohne Root-Rechte (`node` bzw. `nginx-unprivileged`), mit Healthchecks und CPU- und RAM-Limits.
+- **Abhängigkeiten:** Dependabot schlägt wöchentlich Updates für npm-Pakete und GitHub Actions vor, die CI testet jeden Push.
+
+Sicherheitslücken bitte vertraulich melden, wie in [`SECURITY.md`](SECURITY.md) beschrieben.
 
 ## Selbst hosten
 
@@ -125,8 +147,8 @@ Das Backend ist nie direkt erreichbar, nur über den nginx-Proxy im Frontend-Con
 **Voraussetzungen:** Docker mit Compose-Plugin. Läuft auf arm64 (Raspberry Pi) und x86_64.
 
 ```bash
-git clone https://github.com/Guppy997/Lern-PWA.git
-cd Lern-PWA
+git clone https://github.com/Guppy997/lern-pwa.git
+cd lern-pwa
 mkdir -p data        # vorher anlegen, sonst legt Docker den Ordner als root an
 docker compose up -d --build backend frontend
 ```
@@ -139,12 +161,14 @@ Der Backend-Container läuft als User `node` (UID 1000) und muss in `./data` sch
 
 Der Service `ts-lern` hängt die App als eigenen Knoten `lern-pwa` in dein Tailnet und stellt sie per HTTPS bereit (`https://lern-pwa.<dein-tailnet>.ts.net`). Ein echtes HTTPS-Zertifikat ist für die PWA-Installation auf dem Handy nötig.
 
-1. In der Tailscale-Admin-Konsole einen Auth-Key erzeugen: wiederverwendbar, ephemeral, mit Tag `tag:pwa-sidecar`. Der Tag muss in den ACLs einen Owner haben.
-2. Key in `.env` eintragen (die Datei ist in `.gitignore`):
+1. In der Tailscale-Admin-Konsole einen Auth-Key mit dem Tag `tag:pwa-sidecar` erzeugen. Der Tag muss in den ACLs einen Owner haben.
+2. Vorlage kopieren und den Key eintragen (`.env` ist in `.gitignore`):
    ```bash
-   TS_AUTHKEY=tskey-auth-…
+   cp .env.example .env
    ```
 3. Alles starten: `docker compose up -d --build`
+
+Nach dem ersten Start merkt sich der Container seinen Zustand im Volume `ts-lern-state`, der Key wird danach nicht mehr gebraucht.
 
 ### Konfiguration
 
@@ -155,17 +179,17 @@ Der Service `ts-lern` hängt die App als eigenen Knoten `lern-pwa` in dein Tailn
 | `PORT` | backend | `3001` | Port des Backends im Container |
 | `BACKUP_DIR` | backup.js | `<DB-Ordner>/backups` | Ziel für Backups |
 | `BACKUP_KEEP_DAYS` | backup.js | `14` | Wie lange Backups behalten werden |
-| `TS_AUTHKEY` | ts-lern | – | Tailscale-Auth-Key für den Sidecar |
+| `TS_AUTHKEY` | ts-lern | leer | Tailscale-Auth-Key für den Sidecar (siehe `.env.example`) |
 | `VITE_API_PROXY_TARGET` | Vite (Entwicklung) | `http://localhost:3001` | Ziel für `/api` im Dev-Server |
 
 ## Backup und Wiederherstellung
 
-`backend/src/backup.js` erzeugt mit `VACUUM INTO` einen konsistenten Snapshot der Datenbank. Anders als ein einfaches `cp` enthält er auch Änderungen, die noch in der WAL-Datei stehen. Backups landen in `data/backups/lern-YYYY-MM-DD.sqlite` und werden nach 14 Tagen gelöscht.
+`backend/src/backup.js` erzeugt mit `VACUUM INTO` einen konsistenten Snapshot der Datenbank. Anders als ein einfaches `cp` enthält er auch Änderungen, die noch in der WAL-Datei stehen. Backups landen in `data/backups/lern-YYYY-MM-DD.sqlite` und werden nach 14 Tagen gelöscht. Ein zweiter Lauf am selben Tag ersetzt die Tagessicherung.
 
 Täglich per Cron, zum Beispiel um 03:30:
 
 ```cron
-30 3 * * * cd /pfad/zu/Lern-PWA && docker compose exec -T backend node src/backup.js >> backup.log 2>&1
+30 3 * * * cd /pfad/zu/lern-pwa && docker compose exec -T backend node src/backup.js >> backup.log 2>&1
 ```
 
 Manuell: `docker compose exec backend node src/backup.js`
@@ -183,16 +207,16 @@ docker compose start backend
 
 ## Entwicklung
 
-Backend und Frontend laufen lokal ohne Docker (Node 22 oder neuer):
+Backend und Frontend laufen lokal ohne Docker (Node 22.12 oder neuer):
 
 ```bash
-# Terminal 1 – Backend auf :3001
+# Terminal 1: Backend auf :3001
 cd backend
 npm ci
 mkdir -p data
 TZ=Europe/Berlin npm start
 
-# Terminal 2 – Frontend mit Hot Reload auf :5173, /api wird an :3001 weitergereicht
+# Terminal 2: Frontend mit Hot Reload auf :5173, /api wird an :3001 weitergereicht
 cd frontend
 npm ci
 npm run dev
@@ -220,6 +244,17 @@ node scripts/readme-screenshots.mjs                         # → docs/screensho
 
 Andere Adresse oder Chrome-Pfad über `APP_URL` bzw. `CHROME_PATH`. Zur Sicherheit läuft das Skript nur, wenn die App die Demo-Daten zeigt. Die Session, die es für Timer und Feedback startet, verwirft es am Ende wieder.
 
+### Tests
+
+```bash
+cd backend
+npm test
+```
+
+16 API-Tests mit Vitest und Supertest. Sie laufen gegen eine Datenbank im Arbeitsspeicher und berühren nie echte Daten. Abgedeckt sind Projekte (anlegen, verschieben, archivieren, wiederherstellen, löschen), Tagesplan, Sessions mit Feedback samt Grenzen für Fokuszeit, Pause und Bewertung sowie die Statistik-Zeiträume.
+
+Die CI auf GitHub Actions führt bei jedem Push und Pull Request die Tests mit Node 22 und 24 aus und baut das Frontend.
+
 ### Konventionen im Code
 
 - Kommentare auf Deutsch und eher zum *Warum* als zum *Was*.
@@ -227,18 +262,16 @@ Andere Adresse oder Chrome-Pfad über `APP_URL` bzw. `CHROME_PATH`. Zur Sicherhe
 - Zeitstempel speichert SQLite in UTC (`datetime('now')`). Im Frontend immer über `parseDbDate` aus `constants.js` lesen.
 - Einstellungen pro Gerät (eingeklappte Spalten, Kalender-Zeitraum) liegen in `localStorage` und sind immer in `try/catch` gekapselt. Ohne Speicher gilt einfach der Standard.
 
-## Releases und Updates
+## Releases und Versionen
 
 Die App hat eine eigene Versionsnummer mit Versionsverlauf. Für ein sichtbares Release:
 
 1. In `frontend/src/changelog.js` oben einen Eintrag ergänzen und `APP_VERSION` hochzählen.
-2. Dieselbe Version in `frontend/package.json` eintragen.
-3. In dieser README den Abschnitt [Versionen](#versionen) und die Versionszeile unter den Screenshots anpassen.
+2. Dieselbe Version in `frontend/package.json` und `backend/package.json` eintragen.
+3. In dieser README die Tabelle unten und die Versionszeile unter den Screenshots anpassen.
 4. Deployen: `git pull && docker compose up -d --build backend frontend`
 
 Installierte Apps erkennen die neue Version beim Öffnen, beim Zurückholen in den Vordergrund und stündlich, und zeigen dann „Update verfügbar“. Reine Server-Änderungen ohne neues Frontend lösen keinen Hinweis aus.
-
-## Versionen
 
 | Version | Datum | Wichtigste Änderungen |
 |---|---|---|
@@ -259,13 +292,19 @@ Alle Einzelheiten stehen im Versionsverlauf der App (Klick auf die Versionsnumme
 
 ```
 .
+├── .github/
+│   ├── workflows/ci.yml       Tests und Build bei jedem Push (Node 22 und 24)
+│   └── dependabot.yml         Wöchentliche Updates für npm und GitHub Actions
 ├── backend/
 │   ├── Dockerfile
-│   └── src/
-│       ├── index.js           Express-App, TZ-Check, zentrale Fehlerbehandlung
-│       ├── db.js              Verbindung, Schema, Migrationen, WAL-Checkpoints
-│       ├── backup.js          Backup-Skript (VACUUM INTO + Rotation)
-│       └── routes/            projects.js, sessions.js, stats.js
+│   ├── vitest.config.js       Testumgebung: TZ Europe/Berlin, Datenbank im Arbeitsspeicher
+│   ├── src/
+│   │   ├── index.js           Startpunkt: TZ-Check, Server starten
+│   │   ├── app.js             Express-App mit Routen und zentraler Fehlerbehandlung
+│   │   ├── db.js              Verbindung, Schema, Migrationen, WAL-Checkpoints
+│   │   ├── backup.js          Backup-Skript (VACUUM INTO + Rotation)
+│   │   └── routes/            projects.js, sessions.js, stats.js
+│   └── test/api.test.js       API-Tests
 ├── frontend/
 │   ├── Dockerfile, nginx.conf
 │   ├── vite.config.js         PWA-Manifest, Service Worker, Offline-Cache
@@ -280,7 +319,9 @@ Alle Einzelheiten stehen im Versionsverlauf der App (Klick auf die Versionsnumme
 │   └── readme-screenshots.mjs Screenshots für diese README
 ├── docs/screenshots/
 ├── docker-compose.yml
-└── ts-serve.json              tailscale-serve-Konfiguration für den Sidecar
+├── ts-serve.json              tailscale-serve-Konfiguration für den Sidecar
+├── .env.example               Vorlage für den Tailscale-Auth-Key
+└── SECURITY.md                Sicherheitslücken vertraulich melden
 ```
 
 ## API
@@ -318,7 +359,7 @@ Alle Endpunkte liegen unter `/api` und sprechen JSON. Fehler kommen als `{ "erro
 - Oberfläche nur auf Deutsch, Zeitzone fest auf `Europe/Berlin`.
 - Auf Android kommt die Benachrichtigung am Timer-Ende nicht zuverlässig an: Chrome erlaubt dort kein `new Notification()`, und bei gesperrtem Bildschirm pausiert die Seite samt Timer-Ton.
 - Die Schriften (Lora, Source Sans 3) kommen noch von Google Fonts. Das ist die einzige Anfrage an einen fremden Server.
-- Keine automatisierten Tests und kein CI.
+- Automatisierte Tests gibt es für die API, noch nicht für die Oberfläche.
 
 **Ideen**
 - Timer-Ende per Web Push vom Server melden, damit es auch bei gesperrtem Handy ankommt.
@@ -326,6 +367,10 @@ Alle Endpunkte liegen unter `/api` und sprechen JSON. Fehler kommen als `{ "erro
 - Beim Öffnen eines Projekts das Recall und den nächsten Schritt der letzten Session anzeigen.
 - Tagesplan automatisch abhaken, wenn alle geplanten Sessions geschafft sind.
 - Bewertungen zusätzlich nach Session-Länge auswerten (25 vs. 52 Minuten).
+
+## Entstehung
+
+Entwickelt mit KI-Unterstützung (Claude). Idee, Architektur, Anforderungen, Tests und Betrieb liegen bei mir; jede Änderung ist geprüft und versioniert.
 
 ## Lizenz
 
