@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import { formatDuration } from '../constants.js';
+import HeatmapGrid from './HeatmapGrid.jsx';
+
+const MONTH_NAMES = [
+  'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+  'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
+];
 
 const dayLabel = (dateStr, period) => {
   const d = new Date(dateStr + 'T00:00:00');
@@ -8,16 +14,41 @@ const dayLabel = (dateStr, period) => {
   return d.getDate();
 };
 
+const shortDate = (dateStr) =>
+  new Date(dateStr + 'T00:00:00').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+
+// ISO-8601-Kalenderwochennummer (Woche mit dem ersten Donnerstag des Jahres ist KW 1)
+const isoWeekNumber = (dateStr) => {
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+  const yearStart = new Date(d.getFullYear(), 0, 1);
+  return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+};
+
+const periodLabel = (period, days) => {
+  const first = days[0].date;
+  const last = days[days.length - 1].date;
+  if (period === 'week') return `KW ${isoWeekNumber(first)} · ${shortDate(first)}–${shortDate(last)}`;
+  const d = new Date(first + 'T00:00:00');
+  return `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
+};
+
 export default function StatsView({ onBack }) {
   const [period, setPeriod] = useState('week');
+  const [offset, setOffset] = useState(0);
   const [stats, setStats] = useState(null);
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
 
   useEffect(() => {
     setSelectedDate(null);
-    api.getStats(period).then(setStats).catch((err) => setError(err.message));
-  }, [period]);
+    api.getStats(period, offset).then(setStats).catch((err) => setError(err.message));
+  }, [period, offset]);
+
+  const switchPeriod = (next) => {
+    setPeriod(next);
+    setOffset(0);
+  };
 
   if (error) return <div className="card"><p className="error">{error}</p></div>;
   if (!stats) return <div className="card"><p>Lade…</p></div>;
@@ -33,15 +64,31 @@ export default function StatsView({ onBack }) {
       <div className="period-toggle">
         <button
           className={period === 'week' ? '' : 'secondary'}
-          onClick={() => setPeriod('week')}
+          onClick={() => switchPeriod('week')}
         >
           Woche
         </button>
         <button
           className={period === 'month' ? '' : 'secondary'}
-          onClick={() => setPeriod('month')}
+          onClick={() => switchPeriod('month')}
         >
           Monat
+        </button>
+      </div>
+
+      <div className="period-nav">
+        <button type="button" className="ghost" onClick={() => setOffset((o) => o - 1)} aria-label="Vorherige Periode">
+          ←
+        </button>
+        <span className="period-nav-label">{periodLabel(period, stats.days)}</span>
+        <button
+          type="button"
+          className="ghost"
+          onClick={() => setOffset((o) => o + 1)}
+          disabled={offset >= 0}
+          aria-label="Nächste Periode"
+        >
+          →
         </button>
       </div>
 
@@ -90,6 +137,11 @@ export default function StatsView({ onBack }) {
           {selectedDay.session_count} {selectedDay.session_count === 1 ? 'Session' : 'Sessions'}
         </p>
       )}
+
+      <h2 className="stats-heatmap-heading">Lernkalender — {periodLabel(period, stats.days)}</h2>
+      <div className="heatmap-card">
+        <HeatmapGrid days={stats.days} showMonthLabels={false} />
+      </div>
     </div>
   );
 }

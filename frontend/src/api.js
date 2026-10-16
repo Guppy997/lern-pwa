@@ -28,7 +28,7 @@ export const api = {
     request(`/projects/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
   deleteProject: (id) => request(`/projects/${id}`, { method: 'DELETE' }),
   getProject: (id) => request(`/projects/${id}`),
-  getStats: (period) => request(`/stats?period=${period}`),
+  getStats: (period, offset = 0) => request(`/stats?period=${period}&offset=${offset}`),
   setDayPlan: (projectId, data) =>
     request(`/projects/${projectId}/day-plan`, { method: 'POST', body: JSON.stringify(data) }),
   setDayPlanCompleted: (projectId, completed) =>

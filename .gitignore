@@ -5,3 +5,6 @@ data/
 *.sqlite-*
 frontend/certs/
 backup.log
+
+# Secrets (Tailscale-Auth-Key für den Sidecar)
+.env

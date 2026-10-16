@@ -23,6 +23,10 @@
 
 * { box-sizing: border-box; }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   font-family: var(--sans);
@@ -36,9 +40,17 @@ body {
   display: flex;
   justify-content: center;
   min-height: 100vh;
+  min-height: 100dvh;
   padding: 56px 32px;
   letter-spacing: 0.005em;
   line-height: 1.5;
+  overscroll-behavior-y: contain;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, a {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .card {
@@ -55,6 +67,40 @@ body {
   align-self: flex-start;
   margin: auto;
   animation: rise 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Handy: die für Desktop gedachten großzügigen Innenabstände fressen auf
+   schmalen Screens sonst einen Großteil der Breite auf */
+@media (max-width: 640px) {
+  body {
+    padding: 20px 12px calc(20px + env(safe-area-inset-bottom));
+  }
+  .card, .stats-card {
+    padding: 24px 20px;
+    border-radius: 18px;
+  }
+  .board-column {
+    padding: 14px;
+  }
+  h1 { font-size: 1.4rem; }
+  .ring-time { font-size: 2.2rem; }
+
+  /* Die drei gestapelten Kanban-Move-Buttons (←/→/✕) waren bei geteilter
+     Kartenhöhe nur ~20px hoch — auf dem Handy praktisch nicht treffbar */
+  .project-card-move .ghost {
+    min-height: 40px;
+    padding: 0 14px;
+  }
+  .period-nav-label {
+    min-width: 140px;
+    font-size: 0.92rem;
+  }
+  .stats-summary {
+    gap: 8px;
+  }
+  .stats-summary > div {
+    padding: 12px 8px;
+  }
 }
 
 @keyframes rise {
@@ -311,6 +357,79 @@ button.danger:hover { color: #93362b; }
   gap: 10px;
 }
 .new-project input { flex: 1; }
+/* Contribution-Heatmap (GitHub-Stil) */
+.heatmap-card {
+  background: rgba(255, 252, 247, 0.6);
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  box-shadow: var(--shadow-soft);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.heatmap-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.78rem;
+}
+.heatmap-summary strong { font-family: var(--serif); color: var(--accent-strong); font-size: 0.85rem; }
+.heatmap-summary-muted { color: var(--muted); font-size: 0.7rem; }
+
+/* overflow bleibt nur als Sicherheitsnetz — durch die feste Spaltenbreite unten
+   passt die per JS berechnete Wochenzahl normalerweise exakt ohne Scrollbalken */
+.heatmap-scroll { overflow-x: auto; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
+.heatmap-grid { display: flex; gap: 6px; width: max-content; }
+.heatmap-weekday-labels { display: flex; flex-direction: column; gap: 2px; padding-top: 11px; width: 16px; flex: 0 0 auto; }
+.heatmap-weekday-labels span { height: 8px; line-height: 8px; font-size: 0.55rem; color: var(--muted); }
+.heatmap-columns { display: flex; gap: 2px; }
+/* Feste Breite (statt am Inhalt ausgerichtet) — sonst macht ein breiteres
+   Monatslabel ("Sep") genau diese eine Spalte breiter als die anderen, und die
+   Wochenzahl-Berechnung in ContributionHeatmap.jsx passt nicht mehr zur echten Breite */
+.heatmap-column { display: flex; flex-direction: column; gap: 2px; width: 8px; flex: 0 0 auto; }
+/* etwas Luft zwischen den Monats-Blöcken im ganze-Jahr-Raster (Dashboard) */
+.heatmap-column.month-start { margin-left: 6px; }
+.heatmap-month-label { height: 11px; font-size: 0.55rem; color: var(--muted); white-space: nowrap; overflow: visible; }
+.heatmap-column-cells { display: flex; flex-direction: column; gap: 2px; }
+.heatmap-cell {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+  background: var(--border-soft);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+.heatmap-cell:hover:not(.empty) { transform: scale(1.25); }
+.heatmap-cell.empty { background: transparent; cursor: default; }
+.heatmap-cell.selected { outline: 1.5px solid var(--accent-strong); outline-offset: 1px; }
+.heatmap-cell.level-0 { background: var(--border-soft); }
+.heatmap-cell.level-1 { background: rgba(205, 111, 77, 0.3); }
+.heatmap-cell.level-2 { background: rgba(205, 111, 77, 0.5); }
+.heatmap-cell.level-3 { background: rgba(205, 111, 77, 0.75); }
+.heatmap-cell.level-4 { background: var(--accent-strong); }
+
+/* Handy: größere Tipp-Ziele (rein optisch, keine JS-Breitenmessung mehr nötig —
+   das ganze-Jahr-Raster scrollt auf schmalen Screens einfach horizontal) */
+@media (max-width: 600px) {
+  .heatmap-weekday-labels { width: 20px; }
+  .heatmap-weekday-labels span { height: 11px; line-height: 11px; font-size: 0.6rem; }
+  .heatmap-column { width: 11px; }
+  .heatmap-month-label { height: 12px; font-size: 0.6rem; }
+  .heatmap-cell { width: 11px; height: 11px; border-radius: 3px; }
+}
+
+.heatmap-footer { min-height: 18px; display: flex; align-items: center; }
+.heatmap-detail { margin: 0; color: var(--text-soft); font-size: 0.75rem; }
+.heatmap-legend { display: flex; align-items: center; gap: 3px; color: var(--muted); font-size: 0.65rem; }
+.heatmap-legend .heatmap-cell { cursor: default; }
+.heatmap-legend .heatmap-cell:hover { transform: none; }
+
 .board-columns {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -393,7 +512,10 @@ button.danger:hover { color: #93362b; }
   background: transparent;
   border: none;
   color: var(--muted);
-  padding: 0;
+  /* Vertikales Polster statt padding:0 — sonst ist das Tipp-Ziel auf dem
+     Handy nur so hoch wie der Text selbst */
+  padding: 8px 0;
+  margin: -8px 0 -8px;
   font-size: 0.9rem;
   font-weight: 500;
   box-shadow: none;
@@ -554,8 +676,41 @@ button.danger:hover { color: #93362b; }
 
 /* Stats view */
 .stats-card { max-width: 760px; }
+.stats-heatmap-heading {
+  margin: 4px 0 -6px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-soft);
+}
 .period-toggle { display: flex; gap: 10px; }
 .period-toggle button { flex: 1; }
+
+.period-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.period-nav .ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-soft);
+  box-shadow: none;
+  padding: 8px 14px;
+  border-radius: 999px;
+}
+.period-nav .ghost:hover { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-strong); }
+.period-nav .ghost:disabled { opacity: 0.35; }
+.period-nav-label {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 600;
+  color: var(--text-soft);
+  min-width: 180px;
+  text-align: center;
+}
 
 .stats-summary {
   display: grid;
@@ -623,7 +778,7 @@ button.danger:hover { color: #93362b; }
 .app-footer {
   position: fixed;
   left: 16px;
-  bottom: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
   z-index: 50;
   display: flex;
   flex-direction: column;

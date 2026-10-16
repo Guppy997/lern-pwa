@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { BOARD_COLUMNS, formatDuration } from '../constants.js';
+import ContributionHeatmap from './ContributionHeatmap.jsx';
 
 function ProjectCard({ project, onOpen, onMove, onDelete }) {
   const columnIndex = BOARD_COLUMNS.findIndex((c) => c.id === project.status);
@@ -82,6 +83,8 @@ export default function ProjectBoard({
           <span className="stats-button-arrow">→</span>
         </button>
       </div>
+
+      <ContributionHeatmap />
 
       <form className="new-project" onSubmit={submit}>
         <input

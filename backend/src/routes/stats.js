@@ -3,10 +3,54 @@ import { db } from '../db.js';
 
 const router = Router();
 
-// GET /api/stats?period=week|month -> daily focus-time breakdown for charts/overview
+const isoDate = (d) => d.toLocaleDateString('sv-SE'); // lokales Datum, passend zum SQL-'localtime'
+
+// Montag der Woche, die `date` enthält
+const mondayOf = (date) => {
+  const d = new Date(date);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return d;
+};
+
+// offset=0 -> aktuelle Kalenderwoche (Mo-So), -1 -> vorherige, usw.
+const weekDates = (offset) => {
+  const monday = mondayOf(new Date());
+  monday.setDate(monday.getDate() + offset * 7);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(d.getDate() + i);
+    return isoDate(d);
+  });
+};
+
+// offset=0 -> aktueller Kalendermonat, -1 -> vorheriger, usw.
+const monthDates = (offset) => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + offset;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  return Array.from({ length: daysInMonth }, (_, i) => isoDate(new Date(year, month, i + 1)));
+};
+
+// immer Jan-Dez des laufenden Kalenderjahres (auch noch nicht erreichte Monate,
+// die tauchen im Lernkalender einfach als leere Kästchen auf)
+const currentYearDates = () => {
+  const year = new Date().getFullYear();
+  const dates = [];
+  for (let month = 0; month < 12; month++) {
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    for (let day = 1; day <= daysInMonth; day++) dates.push(isoDate(new Date(year, month, day)));
+  }
+  return dates;
+};
+
+// GET /api/stats?period=week|month|currentYear&offset=0 -> daily focus-time breakdown
 router.get('/', (req, res) => {
-  const period = req.query.period === 'month' ? 'month' : 'week';
-  const days = period === 'month' ? 30 : 7;
+  const period = ['month', 'currentYear'].includes(req.query.period) ? req.query.period : 'week';
+  const offset = Number.parseInt(req.query.offset, 10) || 0;
+
+  const dateKeys =
+    period === 'currentYear' ? currentYearDates() : period === 'month' ? monthDates(offset) : weekDates(offset);
 
   const rows = db
     .prepare(
@@ -20,27 +64,20 @@ router.get('/', (req, res) => {
               )) AS INTEGER) AS focus_seconds,
               COUNT(*) AS session_count
        FROM sessions s
-       WHERE s.ended_at IS NOT NULL AND date(s.started_at, 'localtime') >= date('now', 'localtime', ?)
+       WHERE s.ended_at IS NOT NULL AND date(s.started_at, 'localtime') BETWEEN ? AND ?
        GROUP BY date(s.started_at, 'localtime')`
     )
-    .all(`-${days - 1} days`);
+    .all(dateKeys[0], dateKeys[dateKeys.length - 1]);
 
   const byDate = new Map(rows.map((r) => [r.date, r]));
-  const series = [];
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    const key = d.toLocaleDateString('sv-SE'); // lokales Datum, passend zum SQL-'localtime'
+  const series = dateKeys.map((key) => {
     const row = byDate.get(key);
-    series.push({
-      date: key,
-      focus_seconds: row?.focus_seconds || 0,
-      session_count: row?.session_count || 0
-    });
-  }
+    return { date: key, focus_seconds: row?.focus_seconds || 0, session_count: row?.session_count || 0 };
+  });
 
   res.json({
     period,
+    offset,
     days: series,
     totalFocusSeconds: series.reduce((sum, d) => sum + d.focus_seconds, 0),
     totalSessions: series.reduce((sum, d) => sum + d.session_count, 0),
