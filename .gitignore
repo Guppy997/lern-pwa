@@ -1,10 +1,28 @@
+# Abhängigkeiten und Builds
 node_modules/
 dist/
+build/
+coverage/
+
+# Umgebung und Geheimnisse (ins Repo gehört nur .env.example)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+
+# Daten, Datenbanken, Backups
 data/
+backups/
 *.sqlite
 *.sqlite-*
-frontend/certs/
-backup.log
+*.db
+*.db-*
 
-# Secrets (Tailscale-Auth-Key für den Sidecar)
-.env
+# Logs und System
+*.log
+.DS_Store
+
+# Lokale Zertifikate für den Vite-Dev-Server
+frontend/certs/

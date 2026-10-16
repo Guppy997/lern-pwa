@@ -15,5 +15,10 @@
     "@vitejs/plugin-react": "^4.3.1",
     "vite": "^5.4.0",
     "vite-plugin-pwa": "^0.20.5"
+  },
+  "private": "true",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.12"
   }
 }
