@@ -32,8 +32,15 @@ services:
         reservations:
           memory: 16M
 
-  # Eigener Tailscale-Knoten nur für diese App, siehe fitness-pwa/docker-compose.yml
-  # für die ausführliche Begründung (Android-WebAPK-Host-statt-Port-Kollision).
+  # Optional: eigener Tailscale-Knoten nur für diese App. Sie bekommt so einen
+  # eigenen Hostnamen im Tailnet (lern-pwa.<tailnet>.ts.net) samt HTTPS-Zertifikat,
+  # statt sich Hostname + Port mit anderen Web-Apps auf demselben Server zu teilen.
+  # Grund: Android-WebAPKs ordnen sich teils nur über den Hostnamen (ohne Port)
+  # einer Seite zu — mehrere PWAs auf demselben Host mit verschiedenen Ports
+  # kollidieren dadurch beim Installieren ("In <andere App> öffnen").
+  # TS_USERSPACE=true: reines Userspace-Networking, kein /dev/net/tun und kein
+  # NET_ADMIN nötig (der Container nimmt nur Verbindungen an, routet nichts).
+  # Ohne TS_AUTHKEY in .env einfach weglassen: docker compose up -d backend frontend
   ts-lern:
     image: tailscale/tailscale@sha256:25cde9ad76020b0e29229136d0c38b5962e9a0e1774ffac9b0df68e4a37d6cf0
     container_name: lern-pwa-ts

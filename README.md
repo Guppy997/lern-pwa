@@ -26,6 +26,7 @@
 - [API](#api)
 - [Datenmodell](#datenmodell)
 - [Grenzen und Ideen](#grenzen-und-ideen)
+- [Lizenz](#lizenz)
 
 ## Funktionen
 
@@ -248,3 +249,7 @@ Alle Endpunkte liegen unter `/api` und sprechen JSON. Fehler kommen als `{ "erro
 - Beim Öffnen eines Projekts das Recall und den nächsten Schritt der letzten Session anzeigen.
 - Tagesplan automatisch abhaken, wenn alle geplanten Sessions geschafft sind.
 - Sterne-Bewertungen in der Statistik auswerten, z. B. nach Tageszeit und Session-Länge.
+
+## Lizenz
+
+[MIT](LICENSE). Du darfst den Code frei nutzen, verändern und weitergeben, solange der Lizenzhinweis erhalten bleibt.
