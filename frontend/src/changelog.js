@@ -1,8 +1,18 @@
 // Manuell gepflegt — bei jedem sichtbaren Release hier oben einen neuen Eintrag
 // ergänzen und APP_VERSION (+ "version" in package.json) hochzählen.
-export const APP_VERSION = '1.5.0';
+export const APP_VERSION = '1.5.1';
 
 export const CHANGELOG = [
+  {
+    version: '1.5.1',
+    date: '2026-10-16',
+    notes: [
+      'Startseite wieder im gewohnten Aufbau: Lernkalender und "Projekt anlegen" oben, Pfeile ← → auf den Karten',
+      'Unter den Pfeilen öffnet "⋯" die Aktionen Archivieren und Löschen',
+      'Spalten lassen sich per Tipp auf die Überschrift ein- und ausklappen. Sie sind standardmäßig offen, und die App merkt sich deine Auswahl',
+      'Das Archiv bleibt gesammelt unter dem Board'
+    ]
+  },
   {
     version: '1.5.0',
     date: '2026-10-16',

@@ -2,10 +2,24 @@ import { useState } from 'react';
 import { BOARD_COLUMNS, formatDuration, parseDbDate } from '../constants.js';
 import ContributionHeatmap from './ContributionHeatmap.jsx';
 
-// Auf dem Handy liegen die Spalten untereinander — dort bleiben nur die aktiven
-// Projekte aufgeklappt, damit "weiterlernen" ohne Scrollen erreichbar ist
-const NARROW_QUERY = '(max-width: 760px)';
-const isNarrow = () => Boolean(window.matchMedia?.(NARROW_QUERY).matches);
+// Eingeklappte Spalten bleiben über Neustarts hinweg eingeklappt. Reine
+// Bequemlichkeit pro Gerät — ohne localStorage (privater Modus o. Ä.) ist
+// einfach wieder alles offen.
+const COLLAPSED_KEY = 'lern-pwa:collapsed-columns';
+const loadCollapsed = () => {
+  try {
+    return JSON.parse(localStorage.getItem(COLLAPSED_KEY)) || {};
+  } catch {
+    return {};
+  }
+};
+const saveCollapsed = (value) => {
+  try {
+    localStorage.setItem(COLLAPSED_KEY, JSON.stringify(value));
+  } catch {
+    // nicht speicherbar — gilt dann nur bis zum nächsten Neustart
+  }
+};
 
 // Kalendertage statt 24h-Blöcke, damit "gestern 23 Uhr" auch "gestern" heißt
 const lastActiveLabel = (dbDate) => {
@@ -22,8 +36,17 @@ const projectStats = (project) => {
   return `${formatDuration(project.focus_seconds)} gelernt · ${sessions} · ${lastActiveLabel(project.last_active)}`;
 };
 
-function ProjectCard({ project, menuOpen, onToggleMenu, onOpen, onMove, onArchive }) {
-  const targets = BOARD_COLUMNS.filter((c) => c.id !== project.status);
+function ProjectCard({ project, menuOpen, onToggleMenu, onOpen, onMove, onArchive, onDelete }) {
+  const columnIndex = BOARD_COLUMNS.findIndex((c) => c.id === project.status);
+  const prev = BOARD_COLUMNS[columnIndex - 1];
+  const next = BOARD_COLUMNS[columnIndex + 1];
+
+  const handleDelete = () => {
+    const warning = project.session_count
+      ? `"${project.name}" inkl. Verlauf wirklich löschen? Die ${project.session_count} Sessions verschwinden dann auch aus Lernkalender und Statistik — "Archivieren" behält sie.`
+      : `"${project.name}" wirklich löschen?`;
+    if (window.confirm(warning)) onDelete(project);
+  };
 
   return (
     <div className={`project-card ${menuOpen ? 'menu-open' : ''}`}>
@@ -32,85 +55,41 @@ function ProjectCard({ project, menuOpen, onToggleMenu, onOpen, onMove, onArchiv
           <strong>{project.name}</strong>
           <span className="project-card-stats">{projectStats(project)}</span>
         </button>
-        <button
-          type="button"
-          className="ghost project-card-toggle"
-          onClick={onToggleMenu}
-          aria-expanded={menuOpen}
-          aria-label={menuOpen ? 'Aktionen schließen' : `Aktionen für ${project.name}`}
-        >
-          {menuOpen ? '✕' : '⋯'}
-        </button>
+        <div className="project-card-move">
+          <button
+            className="ghost"
+            disabled={!prev}
+            onClick={() => prev && onMove(project, prev.id)}
+            aria-label={`Nach ${prev?.label} verschieben`}
+          >
+            ←
+          </button>
+          <button
+            className="ghost"
+            disabled={!next}
+            onClick={() => next && onMove(project, next.id)}
+            aria-label={`Nach ${next?.label} verschieben`}
+          >
+            →
+          </button>
+          <button
+            className="ghost menu-toggle"
+            onClick={onToggleMenu}
+            aria-expanded={menuOpen}
+            aria-label={menuOpen ? 'Menü schließen' : `Weitere Aktionen für ${project.name}`}
+          >
+            ⋯
+          </button>
+        </div>
       </div>
       {menuOpen && (
         <div className="project-card-actions">
-          {targets.map((c) => (
-            <button type="button" className="secondary" key={c.id} onClick={() => onMove(project, c.id)}>
-              → {c.label}
-            </button>
-          ))}
           {/* Ohne Rückfrage: aus dem Archiv lässt es sich jederzeit wiederherstellen */}
-          <button type="button" className="secondary" onClick={() => onArchive(project)}>
-            Archivieren
-          </button>
+          <button type="button" className="secondary" onClick={() => onArchive(project)}>Archivieren</button>
+          <button type="button" className="secondary danger" onClick={handleDelete}>Löschen</button>
         </div>
       )}
     </div>
-  );
-}
-
-// Projekte anlegen ist selten (Projekte öffnen dagegen täglich) — darum kein
-// dauerhaft sichtbares Eingabefeld mehr, sondern ein Link am Ende von "Aktiv"
-function NewProjectForm({ onCreate }) {
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState('');
-  const [error, setError] = useState(null);
-  const [creating, setCreating] = useState(false);
-
-  const close = () => {
-    setOpen(false);
-    setName('');
-    setError(null);
-  };
-
-  const submit = async (e) => {
-    e.preventDefault();
-    if (!name.trim()) return;
-    setError(null);
-    setCreating(true);
-    try {
-      await onCreate(name.trim());
-      close();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  if (!open) {
-    return (
-      <button type="button" className="link new-project-toggle" onClick={() => setOpen(true)}>
-        + Neues Projekt
-      </button>
-    );
-  }
-
-  return (
-    <form className="new-project" onSubmit={submit}>
-      <input
-        type="text"
-        autoFocus
-        placeholder="z. B. 'SEO-Recherche'"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-      {error && <p className="error">{error}</p>}
-      <div className="actions">
-        <button type="button" className="secondary" onClick={close}>Abbrechen</button>
-        <button type="submit" disabled={creating || !name.trim()}>Anlegen</button>
-      </div>
-    </form>
   );
 }
 
@@ -154,24 +133,43 @@ export default function ProjectBoard({
   projects, onOpen, onMove, onArchive, onRestore, onDelete, onCreate, onShowStats,
   notifPermission, onEnableNotifications
 }) {
-  const [collapsed, setCollapsed] = useState(() => (isNarrow() ? { paused: true, done: true } : {}));
-  const toggleColumn = (id) => setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }));
+  const [name, setName] = useState('');
+  const [error, setError] = useState(null);
+  const [creating, setCreating] = useState(false);
+
+  const [collapsed, setCollapsed] = useState(loadCollapsed);
+  const toggleColumn = (id) => {
+    const next = { ...collapsed, [id]: !collapsed[id] };
+    setCollapsed(next);
+    saveCollapsed(next);
+  };
 
   // Immer nur ein ⋯-Menü offen — sonst bleiben vergessene Menüs anderer Karten
   // stehen, und nach dem Verschieben wäre die Karte in der neuen Spalte noch aufgeklappt
   const [openMenuId, setOpenMenuId] = useState(null);
   const toggleMenu = (id) => setOpenMenuId((current) => (current === id ? null : id));
-  const moveProject = (project, status) => {
+  const closeMenuAnd = (action) => (...args) => {
     setOpenMenuId(null);
-    onMove(project, status);
-  };
-  const archiveProject = (project) => {
-    setOpenMenuId(null);
-    onArchive(project);
+    action(...args);
   };
 
   const onBoard = projects.filter((p) => !p.archived_at);
   const archived = projects.filter((p) => p.archived_at);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    setError(null);
+    setCreating(true);
+    try {
+      await onCreate(name.trim());
+      setName('');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCreating(false);
+    }
+  };
 
   return (
     <div className="board">
@@ -189,6 +187,19 @@ export default function ProjectBoard({
         </button>
       </div>
 
+      <ContributionHeatmap />
+
+      <form className="new-project" onSubmit={submit}>
+        <input
+          type="text"
+          placeholder="Neues Projekt, z. B. 'SEO-Recherche'"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <button type="submit" disabled={creating || !name.trim()}>+ Anlegen</button>
+      </form>
+      {error && <p className="error">{error}</p>}
+
       {notifPermission === 'default' && (
         <div className="notif-banner">
           <span>🔔 Erinnerungen aktivieren, damit du Pausenende & Sessions nicht verpasst.</span>
@@ -204,25 +215,20 @@ export default function ProjectBoard({
       <div className="board-columns">
         {BOARD_COLUMNS.map((col) => {
           const items = onBoard.filter((p) => p.status === col.id);
-          const isActive = col.id === 'active';
-          const isCollapsed = !isActive && Boolean(collapsed[col.id]);
+          const isCollapsed = Boolean(collapsed[col.id]);
           return (
             <div className={`board-column ${isCollapsed ? 'collapsed' : ''}`} key={col.id}>
-              {isActive ? (
-                <h2>{col.label}</h2>
-              ) : (
-                <h2>
-                  <button
-                    type="button"
-                    className="column-toggle"
-                    onClick={() => toggleColumn(col.id)}
-                    aria-expanded={!isCollapsed}
-                  >
-                    <span className="column-toggle-icon" aria-hidden="true">{isCollapsed ? '▸' : '▾'}</span>
-                    {col.label} <span className="column-count">({items.length})</span>
-                  </button>
-                </h2>
-              )}
+              <h2>
+                <button
+                  type="button"
+                  className="column-toggle"
+                  onClick={() => toggleColumn(col.id)}
+                  aria-expanded={!isCollapsed}
+                >
+                  <span className="column-toggle-icon" aria-hidden="true">{isCollapsed ? '▸' : '▾'}</span>
+                  {col.label} <span className="column-count">({items.length})</span>
+                </button>
+              </h2>
               {!isCollapsed && (
                 <div className="board-column-cards">
                   {items.map((p) => (
@@ -232,20 +238,18 @@ export default function ProjectBoard({
                       menuOpen={openMenuId === p.id}
                       onToggleMenu={() => toggleMenu(p.id)}
                       onOpen={onOpen}
-                      onMove={moveProject}
-                      onArchive={archiveProject}
+                      onMove={closeMenuAnd(onMove)}
+                      onArchive={closeMenuAnd(onArchive)}
+                      onDelete={closeMenuAnd(onDelete)}
                     />
                   ))}
                   {items.length === 0 && <p className="empty-hint">Keine Projekte hier</p>}
-                  {isActive && <NewProjectForm onCreate={onCreate} />}
                 </div>
               )}
             </div>
           );
         })}
       </div>
-
-      <ContributionHeatmap />
 
       {archived.length > 0 && (
         <ArchiveSection projects={archived} onRestore={onRestore} onDelete={onDelete} />

@@ -89,6 +89,13 @@ button, a {
   }
   h1 { font-size: 1.4rem; }
   .ring-time { font-size: 2.2rem; }
+
+  /* Die drei gestapelten Kartenbuttons (←/→/⋯) waren bei geteilter
+     Kartenhöhe nur ~20px hoch — auf dem Handy praktisch nicht treffbar */
+  .project-card-move .ghost {
+    min-height: 40px;
+    padding: 0 14px;
+  }
   .period-nav-label {
     min-width: 140px;
     font-size: 0.92rem;
@@ -355,10 +362,9 @@ button.danger:hover { color: #93362b; }
 .notif-banner button { white-space: nowrap; }
 .new-project {
   display: flex;
-  flex-direction: column;
   gap: 10px;
 }
-.new-project-toggle { margin-top: 2px; }
+.new-project input { flex: 1; }
 /* Contribution-Heatmap (GitHub-Stil) */
 .heatmap-card {
   background: rgba(255, 252, 247, 0.6);
@@ -463,8 +469,8 @@ button.danger:hover { color: #93362b; }
 .board-column-cards { display: flex; flex-direction: column; gap: 10px; }
 .empty-hint { color: var(--muted); font-size: 0.85rem; margin: 0; font-style: italic; }
 
-/* Einklappbare Überschrift (Pausiert/Abgeschlossen/Archiv) — sieht aus wie
-   die normale Spaltenüberschrift, nur mit Pfeil und Anzahl */
+/* Einklappbare Überschrift (Spalten/Archiv) — sieht aus wie eine normale
+   Spaltenüberschrift, nur mit Pfeil und Anzahl */
 .column-toggle {
   background: transparent;
   border: none;
@@ -510,19 +516,24 @@ button.danger:hover { color: #93362b; }
 }
 .project-card-main:hover { background: var(--accent-soft); color: var(--text); }
 .project-card-stats { font-size: 0.8rem; color: var(--muted); font-weight: 400; }
-.project-card-toggle {
+.project-card-move {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border-soft);
+}
+.project-card-move .ghost {
+  flex: 1;
   background: transparent;
   border: none;
-  border-left: 1px solid var(--border-soft);
   border-radius: 0;
-  box-shadow: none;
   color: var(--muted);
-  padding: 0 14px;
-  min-width: 52px; /* gut treffbar auf dem Handy */
-  font-size: 1.1rem;
+  padding: 0 12px;
+  font-size: 0.9rem;
+  box-shadow: none;
 }
-.project-card-toggle:hover,
-.project-card.menu-open .project-card-toggle { color: var(--accent-strong); background: var(--accent-soft); }
+.project-card-move .ghost:hover { color: var(--accent-strong); background: var(--accent-soft); }
+.project-card-move .ghost:disabled { opacity: 0.25; }
+.project-card.menu-open .menu-toggle { color: var(--accent-strong); background: var(--accent-soft); }
 .project-card-actions {
   display: flex;
   flex-wrap: wrap;
@@ -537,7 +548,7 @@ button.danger:hover { color: #93362b; }
   font-size: 0.85rem;
 }
 
-/* Archiv: unter dem Lernkalender, standardmäßig eingeklappt */
+/* Archiv: unter den Spalten, standardmäßig eingeklappt */
 .board-archive { display: flex; flex-direction: column; gap: 12px; }
 .board-archive > .column-toggle {
   align-self: flex-start;
