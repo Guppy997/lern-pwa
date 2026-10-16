@@ -1,7 +1,8 @@
-FROM node:20-slim AS build
+FROM node:24-slim AS build
 WORKDIR /app
-COPY package.json ./
-RUN npm install
+# Lockfile mitkopieren + npm ci: reproduzierbarer Build mit den geprüften Versionen
+COPY package.json package-lock.json ./
+RUN npm ci
 COPY . .
 RUN npm run build
 

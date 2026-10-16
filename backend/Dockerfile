@@ -1,9 +1,11 @@
-FROM node:20-slim
+FROM node:24-slim
 
 WORKDIR /app
 
-COPY package.json ./
-RUN npm install --omit=dev
+# Lockfile mitkopieren + npm ci: baut exakt die geprüften Versionen statt bei
+# jedem Build neu innerhalb der ^-Ranges aufzulösen
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
 
 COPY src ./src
 
