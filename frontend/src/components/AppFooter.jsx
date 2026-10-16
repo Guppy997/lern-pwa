@@ -7,7 +7,21 @@ export default function AppFooter() {
   const {
     needRefresh: [needRefresh],
     updateServiceWorker
-  } = useRegisterSW();
+  } = useRegisterSW({
+    // Der Browser prüft sw.js nur beim Navigieren — eine installierte PWA, die
+    // tagelang im Hintergrund offen bleibt, bekäme ein neues Release also nie
+    // mit. Darum zusätzlich beim Zurückholen in den Vordergrund und stündlich.
+    onRegisteredSW(swUrl, registration) {
+      if (!registration) return;
+      const checkForUpdate = () => {
+        if (document.visibilityState !== 'visible' || !navigator.onLine) return;
+        // Pi nicht erreichbar -> einfach beim nächsten Mal wieder versuchen
+        registration.update().catch(() => {});
+      };
+      document.addEventListener('visibilitychange', checkForUpdate);
+      setInterval(checkForUpdate, 60 * 60 * 1000);
+    }
+  });
 
   return (
     <div className="app-footer">

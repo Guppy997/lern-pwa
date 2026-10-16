@@ -1,8 +1,16 @@
 // Manuell gepflegt — bei jedem sichtbaren Release hier oben einen neuen Eintrag
 // ergänzen und APP_VERSION (+ "version" in package.json) hochzählen.
-export const APP_VERSION = '1.4.0';
+export const APP_VERSION = '1.4.1';
 
 export const CHANGELOG = [
+  {
+    version: '1.4.1',
+    date: '2026-10-16',
+    notes: [
+      'Der Hinweis "Update verfügbar" kommt jetzt auch, wenn die App lange offen bleibt: Sie sucht beim Zurückholen in den Vordergrund und stündlich nach neuen Versionen',
+      'Wartung im Hintergrund: Server auf Node 24 aktualisiert, reproduzierbare Builds'
+    ]
+  },
   {
     version: '1.4.0',
     date: '2026-07-07',
