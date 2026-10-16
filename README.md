@@ -23,7 +23,7 @@
   </tr>
 </table>
 
-<sub>Screenshots mit Demo-Daten (siehe <a href="#mit-demo-daten-ausprobieren">Mit Demo-Daten ausprobieren</a>). Aktuelle Version: 1.6.1.</sub>
+<sub>Screenshots mit Demo-Daten (siehe <a href="#mit-demo-daten-ausprobieren">Mit Demo-Daten ausprobieren</a>). Aktuelle Version: 1.6.2.</sub>
 
 ## Inhalt
 
@@ -70,7 +70,6 @@ flowchart LR
 - **Fokus-Timer** mit drei Zeitsystemen: 25/5 (Sprint), 52/17 (Deep Work) oder frei wählbar (5–180 min). Mit Pause/Weiter, Signalton und Browser-Benachrichtigung am Ende. Bei 25/5 und 52/17 startet nach dem Feedback automatisch der Pausen-Timer.
 - Der Timer rechnet mit echten Zeitstempeln statt mitgezählten Sekunden. Er bleibt also korrekt, auch wenn der Browser den Tab drosselt oder das Handy schläft.
 - **Offene Sessions:** Wird die App mitten in einer Session geschlossen, lässt sich die Session später fortsetzen oder verwerfen.
-- **Überschriften-Check:** Während der Session vor dem Lesen eines Abschnitts kurz aufschreiben, was man darunter erwartet.
 
 **Reflektieren**
 - **Feedback nach jeder Session:** Active Recall (aus dem Kopf aufschreiben, was hängengeblieben ist), Bewertung von 1–5 Sternen und eine freie Notiz.
@@ -203,7 +202,7 @@ Zum Testen mit echten Daten ein Backup kopieren und das Backend darauf zeigen la
 
 ### Mit Demo-Daten ausprobieren
 
-`scripts/seed-demo.mjs` legt eine Datenbank mit acht ausgedachten Projekten und rund 250 Sessions über das letzte Jahr an, inklusive Tagesplan für heute und einer Lern-Serie. Das Skript schreibt nur in eine leere Datei und bricht ab, wenn dort schon Projekte stehen.
+`scripts/seed-demo.mjs` legt eine Datenbank mit acht ausgedachten Projekten und gut 200 Sessions über das letzte Jahr an, inklusive Tagesplan für heute und einer Lern-Serie. Das Skript schreibt nur in eine leere Datei und bricht ab, wenn dort schon Projekte stehen.
 
 ```bash
 cd backend && npm ci && cd ..
@@ -243,7 +242,8 @@ Installierte Apps erkennen die neue Version beim Öffnen, beim Zurückholen in d
 
 | Version | Datum | Wichtigste Änderungen |
 |---|---|---|
-| **1.6.1** | 16.10.2026 | Statistik unten ruhiger und aufgeräumter, gleiche Breite in Wochen- und Monatsansicht |
+| **1.6.2** | 16.10.2026 | Überschriften-Check entfernt, der Timer ist jetzt schlichter |
+| 1.6.1 | 16.10.2026 | Statistik unten ruhiger und aufgeräumter, gleiche Breite in Wochen- und Monatsansicht |
 | 1.6.0 | 16.10.2026 | Lernkalender mit Zeitraum-Filter (3/6/12 Monate) und größeren Feldern; Statistik nach Projekt und Bewertung |
 | 1.5.2 | 16.10.2026 | Versionsnummer am Seitenende statt schwebend über dem Inhalt |
 | 1.5.0–1.5.1 | 16.10.2026 | Archiv, einklappbare Spalten, ⋯-Menü zum Archivieren und Löschen, „zuletzt gelernt“ auf den Karten |
@@ -298,7 +298,7 @@ Alle Endpunkte liegen unter `/api` und sprechen JSON. Fehler kommen als `{ "erro
 | `POST` | `/projects/:id/day-plan` | Heutigen Plan anlegen oder ersetzen: `{ goal, method, plannedSessions }` |
 | `PATCH` | `/projects/:id/day-plan` | Heutigen Plan abhaken oder wieder öffnen: `{ completed }` |
 | `POST` | `/sessions` | Session starten: `{ projectId, dayPlanId?, plannedMinutes }` |
-| `PATCH` | `/sessions/:id` | Session mit Feedback abschließen: `{ focusSeconds, pausedSeconds, efficiencyRating, recallText, feedbackNote, methodData }` |
+| `PATCH` | `/sessions/:id` | Session mit Feedback abschließen: `{ focusSeconds, pausedSeconds, efficiencyRating, recallText, feedbackNote }` |
 | `DELETE` | `/sessions/:id` | Laufende Session verwerfen oder aus dem Verlauf löschen |
 | `GET` | `/stats?period=week\|month&offset=0` | Fokuszeit pro Tag (`days`) plus `projects` (Lernzeit pro Projekt) und `rating` (Ø Bewertung, `byDaytime`). `offset=-1` ist die vorherige Woche bzw. der vorherige Monat |
 | `GET` | `/stats?period=lastMonths&months=12` | Dasselbe für den Lernkalender: vom 1. des Monats vor `months − 1` Monaten bis heute (1–12) |
@@ -309,7 +309,7 @@ Alle Endpunkte liegen unter `/api` und sprechen JSON. Fehler kommen als `{ "erro
 |---|---|
 | `projects` | `name` (eindeutig), `status` (`active`/`paused`/`done`), `archived_at` |
 | `day_plans` | `project_id`, `date` (lokales Datum, eindeutig pro Projekt), `goal`, `method` (`sprint`, `deep` oder `free:<Minuten>`), `planned_sessions`, `completed_at` |
-| `sessions` | `project_id`, `day_plan_id`, `planned_minutes`, `started_at`, `ended_at` (leer = offene Session), `focus_seconds`, `paused_seconds`, `efficiency_rating`, `recall_text`, `feedback_note`, `method_data` (Überschriften-Checks als JSON) |
+| `sessions` | `project_id`, `day_plan_id`, `planned_minutes`, `started_at`, `ended_at` (leer = offene Session), `focus_seconds`, `paused_seconds`, `efficiency_rating`, `recall_text`, `feedback_note`. Dazu `method_data` aus dem früheren Überschriften-Check (seit v1.6.2 ungenutzt, bleibt für alte Datenbanken bestehen) |
 
 ## Grenzen und Ideen
 

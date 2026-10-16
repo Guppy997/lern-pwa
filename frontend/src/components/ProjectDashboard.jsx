@@ -18,20 +18,6 @@ const dayLabel = (date) => {
   return `${d}.${m}.${y}`;
 };
 
-// method_data: neues Format ist ein Array von Überschriften-Checks,
-// alte Sessions haben noch ein einzelnes Objekt {heading, headingGuess}
-const parseHeadings = (raw) => {
-  if (!raw) return [];
-  try {
-    const data = JSON.parse(raw);
-    if (Array.isArray(data)) return data;
-    if (data.heading) return [{ heading: data.heading, guess: data.guess || data.headingGuess }];
-    return [];
-  } catch {
-    return [];
-  }
-};
-
 const formatStartedAt = (dbDate) => {
   const d = parseDbDate(dbDate);
   return `${d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' })}, ${d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr`;
@@ -42,8 +28,6 @@ const formatTime = (dbDate) =>
   `${parseDbDate(dbDate).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr`;
 
 function HistoryItem({ session, expanded, onToggle, onDelete }) {
-  const headings = parseHeadings(session.method_data);
-
   const handleDelete = (e) => {
     e.stopPropagation();
     if (window.confirm('Diese Session aus dem Verlauf löschen?')) onDelete(session.id);
@@ -71,19 +55,6 @@ function HistoryItem({ session, expanded, onToggle, onDelete }) {
             <>
               <p className="hint-label">Active Recall</p>
               <p className="history-text">{session.recall_text}</p>
-            </>
-          )}
-          {headings.length > 0 && (
-            <>
-              <p className="hint-label">Überschriften-Checks</p>
-              <ul className="heading-list">
-                {headings.map((h, i) => (
-                  <li key={i}>
-                    <strong>{h.heading}</strong>
-                    <span>{h.guess}</span>
-                  </li>
-                ))}
-              </ul>
             </>
           )}
           {session.feedback_note && (

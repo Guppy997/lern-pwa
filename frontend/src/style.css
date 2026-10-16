@@ -274,7 +274,10 @@ button.danger:hover { color: #93362b; }
 .hint-label { color: var(--muted); margin: 0; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.09em; font-weight: 600; }
 .hint { color: var(--muted); font-style: italic; margin: 0; font-family: var(--serif); }
 
-.timer-card { align-items: center; text-align: center; }
+/* Feste Breite: Karten richten sich sonst nach ihrem breitesten Inhalt, und
+   ohne lange Texte würde der Timer schmal und "Session beenden" bricht um.
+   Auf dem Handy begrenzt max-width auf die Bildschirmbreite. */
+.timer-card { width: 520px; max-width: 100%; align-items: center; text-align: center; }
 .timer-card .tool-box { width: 100%; text-align: left; }
 .timer-card .actions { width: 100%; }
 
@@ -719,23 +722,6 @@ button.danger:hover { color: #93362b; }
 }
 .history-meta { margin: 0; color: var(--muted); font-size: 0.82rem; }
 .history-text { margin: 0; color: var(--text-soft); white-space: pre-wrap; }
-
-.heading-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.heading-list li {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  border-left: 3px solid var(--border);
-  padding-left: 10px;
-}
-.heading-list li span { color: var(--muted); font-size: 0.85rem; }
 
 .resume-banner {
   display: flex;

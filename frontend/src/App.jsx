@@ -143,8 +143,8 @@ export default function App() {
     setActiveSession(null);
   });
 
-  const handleTimerFinish = ({ focusSeconds, pausedSeconds, methodData }) => {
-    setActiveSession((prev) => ({ ...prev, focusSeconds, pausedSeconds, methodData }));
+  const handleTimerFinish = ({ focusSeconds, pausedSeconds }) => {
+    setActiveSession((prev) => ({ ...prev, focusSeconds, pausedSeconds }));
     setView('feedback');
   };
 
@@ -154,8 +154,7 @@ export default function App() {
     await api.finishSession(activeSession.id, {
       ...feedback,
       focusSeconds: activeSession.focusSeconds,
-      pausedSeconds: activeSession.pausedSeconds || 0,
-      methodData: activeSession.methodData?.length ? activeSession.methodData : null
+      pausedSeconds: activeSession.pausedSeconds || 0
     });
     const breakMinutes = breakMinutesFor(activeSession.methodId);
     if (breakMinutes) {

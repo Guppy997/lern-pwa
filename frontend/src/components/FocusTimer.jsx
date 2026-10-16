@@ -31,12 +31,6 @@ export default function FocusTimer({ plannedMinutes, methodId, startedAtMs, onFi
   const [running, setRunning] = useState(initialRemaining > 0);
   const [done, setDone] = useState(initialRemaining <= 0);
 
-  // Überschriften-Check: beliebig oft während der Session nutzbar
-  const [headings, setHeadings] = useState([]);
-  const [showHeadingForm, setShowHeadingForm] = useState(false);
-  const [heading, setHeading] = useState('');
-  const [headingGuess, setHeadingGuess] = useState('');
-
   useEffect(() => {
     if (!running || done) return undefined;
 
@@ -86,21 +80,12 @@ export default function FocusTimer({ plannedMinutes, methodId, startedAtMs, onFi
     const activeSeconds = Math.floor((Date.now() - startedAtRef.current - pausedMs) / 1000);
     onFinish({
       focusSeconds: Math.min(Math.max(0, activeSeconds), total),
-      pausedSeconds: Math.round(pausedMs / 1000),
-      methodData: headings
+      pausedSeconds: Math.round(pausedMs / 1000)
     });
   };
 
   const discard = () => {
     if (window.confirm('Session wirklich verwerfen? Sie wird nicht gespeichert.')) onDiscard();
-  };
-
-  const addHeading = () => {
-    if (!heading.trim() || !headingGuess.trim()) return;
-    setHeadings((prev) => [...prev, { heading: heading.trim(), guess: headingGuess.trim() }]);
-    setHeading('');
-    setHeadingGuess('');
-    setShowHeadingForm(false);
   };
 
   const pausedSecondsTotal = Math.round(
@@ -124,56 +109,6 @@ export default function FocusTimer({ plannedMinutes, methodId, startedAtMs, onFi
             <p className="hint">Mach jetzt {breakMinutes} Minuten Pause, bevor du weitermachst.</p>
           )}
         </div>
-      )}
-
-      {headings.length > 0 && (
-        <div className="tool-box">
-          <p className="hint-label">Überschriften-Check</p>
-          <ul className="heading-list">
-            {headings.map((h, i) => (
-              <li key={i}>
-                <strong>{h.heading}</strong>
-                <span>{h.guess}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {!done && showHeadingForm && (
-        <div className="tool-box">
-          <p className="hint-label">Überschriften-Check</p>
-          <label>
-            Nächste Überschrift
-            <input
-              type="text"
-              placeholder="z. B. Kontostruktur in Google Ads"
-              value={heading}
-              onChange={(e) => setHeading(e.target.value)}
-            />
-          </label>
-          <label>
-            Was denke ich, was das bedeutet?
-            <textarea
-              rows="2"
-              placeholder="Deine Vermutung, bevor du liest…"
-              value={headingGuess}
-              onChange={(e) => setHeadingGuess(e.target.value)}
-            />
-          </label>
-          <div className="actions">
-            <button type="button" className="secondary" onClick={() => setShowHeadingForm(false)}>Abbrechen</button>
-            <button type="button" onClick={addHeading} disabled={!heading.trim() || !headingGuess.trim()}>
-              Merken & lesen
-            </button>
-          </div>
-        </div>
-      )}
-
-      {!done && !showHeadingForm && (
-        <button className="link" onClick={() => setShowHeadingForm(true)}>
-          + Überschriften-Check (Vermutung vor dem Lesen festhalten)
-        </button>
       )}
 
       <div className="actions">

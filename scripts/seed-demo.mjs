@@ -1,4 +1,4 @@
-// Legt eine Demo-Datenbank mit ausgedachten Projekten und ~250 Sessions übers
+// Legt eine Demo-Datenbank mit ausgedachten Projekten und gut 200 Sessions übers
 // Jahr an — zum Ausprobieren der App und für die README-Screenshots.
 //
 //   cd backend && npm ci && cd ..
@@ -52,10 +52,6 @@ const NOTES = [
   'Zu müde für Deep Work, nächstes Mal lieber vormittags.',
   null, null, null
 ];
-const HEADINGS = [
-  [{ heading: 'Multiple Regression', guess: 'Mehrere Einflussgrößen gleichzeitig, Effekte gegenseitig bereinigt' }],
-  [{ heading: 'Custom Hooks', guess: 'Wiederverwendbare Logik mit State, Name beginnt mit use' }]
-];
 const GOALS = {
   'Statistik-Klausur': ['Kapitel 4: Konfidenzintervalle', 'Altklausur 2024 rechnen', 'Hypothesentests wiederholen'],
   'Spanisch B1': ['20 neue Vokabeln + Wiederholung', 'Subjuntivo üben', 'Hörverstehen Lektion 7'],
@@ -79,9 +75,9 @@ const insertPlan = db.prepare(
   'INSERT INTO day_plans (project_id, date, goal, method, planned_sessions, created_at, completed_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
 );
 const insertSession = db.prepare(`INSERT INTO sessions
-  (project_id, day_plan_id, mode, planned_minutes, paused_seconds, method_data, started_at, ended_at,
+  (project_id, day_plan_id, mode, planned_minutes, paused_seconds, started_at, ended_at,
    efficiency_rating, feedback_note, recall_text, focus_seconds)
-  VALUES (?, ?, 'free', ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+  VALUES (?, ?, 'free', ?, ?, ?, ?, ?, ?, ?, ?)`);
 
 const addSession = (projectId, planId, method, start) => {
   const planned = method === 'deep' ? 52 : 25;
@@ -90,7 +86,6 @@ const addSession = (projectId, planId, method, start) => {
   const end = new Date(start.getTime() + (focus + paused) * 1000);
   insertSession.run(
     projectId, planId, planned, paused,
-    rnd() < 0.12 ? JSON.stringify(pick(HEADINGS)) : null,
     toDb(start), toDb(end),
     pick([3, 4, 4, 4, 5, 5, 2]),
     pick(NOTES),

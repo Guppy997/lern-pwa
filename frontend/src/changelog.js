@@ -1,8 +1,15 @@
 // Manuell gepflegt — bei jedem sichtbaren Release hier oben einen neuen Eintrag
 // ergänzen und APP_VERSION (+ "version" in package.json) hochzählen.
-export const APP_VERSION = '1.6.1';
+export const APP_VERSION = '1.6.2';
 
 export const CHANGELOG = [
+  {
+    version: '1.6.2',
+    date: '2026-10-16',
+    notes: [
+      'Überschriften-Check entfernt: Der Timer zeigt nur noch Zeit, Pause und Beenden'
+    ]
+  },
   {
     version: '1.6.1',
     date: '2026-10-16',
