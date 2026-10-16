@@ -1,14 +1,24 @@
 {
   "name": "lern-pwa-backend",
-  "version": "1.0.0",
+  "version": "1.6.2",
+  "private": true,
+  "license": "MIT",
   "type": "module",
   "main": "src/index.js",
+  "engines": {
+    "node": ">=22.12"
+  },
   "scripts": {
     "start": "node src/index.js",
-    "backup": "node src/backup.js"
+    "backup": "node src/backup.js",
+    "test": "vitest run"
   },
   "dependencies": {
     "better-sqlite3": "^12.11.1",
     "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "supertest": "^7.3.1",
+    "vitest": "^5.0.5"
   }
 }
