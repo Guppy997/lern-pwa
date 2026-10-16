@@ -8,7 +8,7 @@
   <tr>
     <td align="center"><img src="docs/screenshots/projekt-handy.png" width="250" alt="Projekt mit Tagesplan und Verlauf"><br><sub>Tagesplan und Verlauf</sub></td>
     <td align="center"><img src="docs/screenshots/timer-handy.png" width="250" alt="Fokus-Timer"><br><sub>Fokus-Timer</sub></td>
-    <td align="center"><img src="docs/screenshots/statistik-handy.png" width="250" alt="Wochenstatistik"><br><sub>Statistik</sub></td>
+    <td align="center"><img src="docs/screenshots/statistik-handy.png" width="250" alt="Monatsstatistik mit Lernzeit pro Projekt und Bewertungen"><br><sub>Statistik</sub></td>
   </tr>
 </table>
 
@@ -47,8 +47,11 @@
 - **Verlauf** pro Projekt nach Kalendertag gruppiert, mit Tagesziel, geplant vs. geschafft und Details zu jeder Session.
 
 **Überblick**
-- **Lernkalender** im GitHub-Stil über das laufende Jahr, mit Lern-Serie in Tagen.
-- **Statistik** nach Woche oder Monat, zum Durchblättern, mit Fokuszeit pro Tag.
+- **Lernkalender** im GitHub-Stil mit Lern-Serie in Tagen. Zeitraum per Filter: 3 Monate (Standard), 6 oder 12 Monate. Die Wahl merkt sich die App pro Gerät. Die Felder wachsen mit der verfügbaren Breite.
+- **Statistik** nach Woche oder Monat, zum Durchblättern:
+  - Fokuszeit pro Tag als Diagramm.
+  - „Wofür du gelernt hast“: Lernzeit pro Projekt mit Anteil.
+  - „Wie es lief“: Ø Sterne-Bewertung, auch nach Tageszeit.
 - Gezählt wird nur aktive Timer-Zeit, also ohne Pausen und gedeckelt auf die geplante Dauer. Wer den Timer nach dem Ende liegen lässt, bekommt das nicht als Lernzeit gutgeschrieben.
 
 **App**
@@ -226,7 +229,8 @@ Alle Endpunkte liegen unter `/api` und sprechen JSON. Fehler kommen als `{ "erro
 | `POST` | `/sessions` | Session starten: `{ projectId, dayPlanId?, plannedMinutes }` |
 | `PATCH` | `/sessions/:id` | Session mit Feedback abschließen: `{ focusSeconds, pausedSeconds, efficiencyRating, recallText, feedbackNote, methodData }` |
 | `DELETE` | `/sessions/:id` | Laufende Session verwerfen oder aus dem Verlauf löschen |
-| `GET` | `/stats?period=week\|month\|currentYear&offset=0` | Fokuszeit pro Tag; `offset=-1` ist die vorherige Woche bzw. der vorherige Monat |
+| `GET` | `/stats?period=week\|month&offset=0` | Fokuszeit pro Tag (`days`) plus `projects` (Lernzeit pro Projekt) und `rating` (Ø Bewertung, `byDaytime`). `offset=-1` ist die vorherige Woche bzw. der vorherige Monat |
+| `GET` | `/stats?period=lastMonths&months=12` | Dasselbe für den Lernkalender: vom 1. des Monats vor `months − 1` Monaten bis heute (1–12) |
 
 ## Datenmodell
 
@@ -248,7 +252,7 @@ Alle Endpunkte liegen unter `/api` und sprechen JSON. Fehler kommen als `{ "erro
 - Timer-Ende per Web Push vom Server melden, damit es auch bei gesperrtem Handy ankommt.
 - Beim Öffnen eines Projekts das Recall und den nächsten Schritt der letzten Session anzeigen.
 - Tagesplan automatisch abhaken, wenn alle geplanten Sessions geschafft sind.
-- Sterne-Bewertungen in der Statistik auswerten, z. B. nach Tageszeit und Session-Länge.
+- Bewertungen zusätzlich nach Session-Länge auswerten (25 vs. 52 Minuten).
 
 ## Lizenz
 

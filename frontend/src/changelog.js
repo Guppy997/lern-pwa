@@ -1,8 +1,16 @@
 // Manuell gepflegt — bei jedem sichtbaren Release hier oben einen neuen Eintrag
 // ergänzen und APP_VERSION (+ "version" in package.json) hochzählen.
-export const APP_VERSION = '1.5.2';
+export const APP_VERSION = '1.6.0';
 
 export const CHANGELOG = [
+  {
+    version: '1.6.0',
+    date: '2026-10-16',
+    notes: [
+      'Lernkalender auf der Startseite: standardmäßig die letzten 3 Monate mit deutlich größeren Feldern. Über den Filter oben rechts auch 6 oder 12 Monate. Die App merkt sich deine Wahl',
+      'Statistik: Statt der kleinen Kalender-Kästchen zeigt sie jetzt, wofür du wie lange gelernt hast (pro Projekt) und wie es lief (Ø Bewertung, auch nach Tageszeit)'
+    ]
+  },
   {
     version: '1.5.2',
     date: '2026-10-16',

@@ -45,24 +45,23 @@ function monthLabels(columns) {
   });
 }
 
-// Reine Anzeige-Komponente: bekommt fertige Tagesdaten und stellt sie als
-// GitHub-artiges Kästchen-Raster dar. groupByMonth fügt zwischen den
-// Monats-Blöcken etwas Abstand ein (fürs ganze-Jahr-Raster auf dem Dashboard) —
-// bei einem einzelnen Monat/einer Woche (Statistik-Seite) ist das nicht nötig.
-export default function HeatmapGrid({ days, groupByMonth = false, showMonthLabels = true }) {
+// Reine Anzeige-Komponente: stellt Tagesdaten als GitHub-artiges Kästchen-Raster
+// dar. Alles liegt in EINEM CSS-Grid, das spaltenweise gefüllt wird (erst die
+// Wochentags-Labels, dann je Woche Monats-Label + 7 Tage) — so bleiben Labels
+// und Felder bündig, egal wie groß die Felder gerade sind (siehe .heatmap-grid).
+export default function HeatmapGrid({ days }) {
   const [selected, setSelected] = useState(null);
   const scrollRef = useRef(null);
 
-  // Passt das Raster nicht in die Breite (ganzes Jahr auf dem Handy), den
-  // heutigen Tag in die Mitte scrollen — sonst sieht man nur Januar bis Juni.
-  // Nur horizontal im Kalender, die Seite selbst springt dabei nicht.
+  // Passt das Raster nicht in die Breite (12 Monate auf dem Handy), den heutigen
+  // Tag in die Mitte scrollen. Nur horizontal im Kalender, die Seite springt nicht.
   useEffect(() => {
     const scroller = scrollRef.current;
     const todayCell = scroller?.querySelector(`[data-date="${new Date().toLocaleDateString('sv-SE')}"]`);
     if (!todayCell || scroller.scrollWidth <= scroller.clientWidth) return;
     const offset = todayCell.getBoundingClientRect().left - scroller.getBoundingClientRect().left;
     scroller.scrollLeft += offset - scroller.clientWidth / 2;
-  }, [days]);
+  }, [days[0]?.date, days.length]);
 
   const columns = toColumns(days);
   const labels = monthLabels(columns);
@@ -70,38 +69,29 @@ export default function HeatmapGrid({ days, groupByMonth = false, showMonthLabel
   return (
     <>
       <div className="heatmap-scroll" ref={scrollRef}>
-        <div className="heatmap-grid">
-          <div className="heatmap-weekday-labels">
-            {WEEKDAY_LABELS.map((label, i) => (
-              <span key={i}>{label}</span>
-            ))}
-          </div>
-          <div className="heatmap-columns">
-            {columns.map((column, i) => (
-              <div
-                className={`heatmap-column ${groupByMonth && labels[i] && i > 0 ? 'month-start' : ''}`}
-                key={i}
-              >
-                <span className="heatmap-month-label">{showMonthLabels ? labels[i] : ''}</span>
-                <div className="heatmap-column-cells">
-                  {column.map((cell, j) =>
-                    cell ? (
-                      <button
-                        type="button"
-                        key={j}
-                        data-date={cell.date}
-                        className={`heatmap-cell level-${cell.level} ${selected?.date === cell.date ? 'selected' : ''}`}
-                        title={`${cell.date} · ${formatDuration(cell.focus_seconds)}`}
-                        onClick={() => setSelected(selected?.date === cell.date ? null : cell)}
-                      />
-                    ) : (
-                      <span className="heatmap-cell empty" key={j} />
-                    )
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="heatmap-grid" style={{ '--weeks': columns.length }}>
+          <span className="heatmap-corner" />
+          {WEEKDAY_LABELS.map((label, i) => (
+            <span className="heatmap-weekday" key={`wd-${i}`}>{label}</span>
+          ))}
+          {columns.map((column, i) => [
+            <span className="heatmap-month-label" key={`m-${i}`}>{labels[i]}</span>,
+            ...column.map((cell, j) =>
+              cell ? (
+                <button
+                  type="button"
+                  key={`${i}-${j}`}
+                  data-date={cell.date}
+                  className={`heatmap-cell level-${cell.level} ${selected?.date === cell.date ? 'selected' : ''}`}
+                  title={`${cell.date} · ${formatDuration(cell.focus_seconds)}`}
+                  aria-label={`${cell.date}: ${formatDuration(cell.focus_seconds)}`}
+                  onClick={() => setSelected(selected?.date === cell.date ? null : cell)}
+                />
+              ) : (
+                <span className="heatmap-cell empty" key={`${i}-${j}`} />
+              )
+            )
+          ])}
         </div>
       </div>
 

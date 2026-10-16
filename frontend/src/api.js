@@ -31,6 +31,7 @@ export const api = {
   deleteProject: (id) => request(`/projects/${id}`, { method: 'DELETE' }),
   getProject: (id) => request(`/projects/${id}`),
   getStats: (period, offset = 0) => request(`/stats?period=${period}&offset=${offset}`),
+  getRecentStats: (months) => request(`/stats?period=lastMonths&months=${months}`),
   setDayPlan: (projectId, data) =>
     request(`/projects/${projectId}/day-plan`, { method: 'POST', body: JSON.stringify(data) }),
   setDayPlanCompleted: (projectId, completed) =>
