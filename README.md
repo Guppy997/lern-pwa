@@ -1,37 +1,67 @@
 # Lern-PWA
 
-**Lern-Sessions** ist ein selbst gehosteter Lern-Tracker als installierbare Web-App. Pro Lernprojekt planst du deinen Tag, lernst in festen Fokus-Phasen und hältst danach fest, was hängengeblieben ist. Läuft komplett auf eigener Hardware (bei mir ein Raspberry Pi 5), ohne Konto, ohne Tracking, ohne Cloud.
+**Lern-Sessions** ist ein selbst gehosteter Lern-Tracker als installierbare Web-App. Pro Lernprojekt planst du deinen Tag, lernst in festen Fokus-Phasen und hältst danach fest, was hängengeblieben ist. Läuft komplett auf eigener Hardware (bei mir ein Raspberry Pi 5), ohne Konto und ohne Tracking.
 
-![Projekt-Board mit Lernkalender](docs/screenshots/board-desktop.png)
+![MIT-Lizenz](https://img.shields.io/badge/Lizenz-MIT-cd6f4d)
+![React 18](https://img.shields.io/badge/React-18-cd6f4d)
+![Node 24](https://img.shields.io/badge/Node-24-cd6f4d)
+![SQLite](https://img.shields.io/badge/SQLite-WAL-cd6f4d)
+![PWA](https://img.shields.io/badge/PWA-installierbar-cd6f4d)
+
+![Projekt-Board mit 12-Monats-Lernkalender](docs/screenshots/board-desktop.png)
 
 <table>
   <tr>
-    <td align="center"><img src="docs/screenshots/projekt-handy.png" width="250" alt="Projekt mit Tagesplan und Verlauf"><br><sub>Tagesplan und Verlauf</sub></td>
-    <td align="center"><img src="docs/screenshots/timer-handy.png" width="250" alt="Fokus-Timer"><br><sub>Fokus-Timer</sub></td>
-    <td align="center"><img src="docs/screenshots/statistik-handy.png" width="250" alt="Monatsstatistik mit Lernzeit pro Projekt und Bewertungen"><br><sub>Statistik</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/start-handy.png" width="240" alt="Startseite mit Lernkalender und Zeitraum-Filter"><br><sub>Startseite mit Lernkalender</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/projekt-handy.png" width="240" alt="Projekt mit Tagesplan und Verlauf"><br><sub>Tagesplan und Verlauf</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/timer-handy.png" width="240" alt="Laufender Fokus-Timer"><br><sub>Fokus-Timer</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/feedback-handy.png" width="240" alt="Feedback mit Active Recall und Bewertung"><br><sub>Feedback nach der Session</sub></td>
+    <td align="center"><img src="docs/screenshots/statistik-handy.png" width="240" alt="Monatsstatistik mit Lernzeit pro Projekt und Bewertungen"><br><sub>Statistik</sub></td>
+    <td align="center"><img src="docs/screenshots/aktionen-handy.png" width="240" alt="Projektkarte mit Pfeilen und geöffnetem Menü"><br><sub>Verschieben, archivieren, löschen</sub></td>
   </tr>
 </table>
 
-<sub>Screenshots mit Demo-Daten.</sub>
+<sub>Screenshots mit Demo-Daten (siehe <a href="#mit-demo-daten-ausprobieren">Mit Demo-Daten ausprobieren</a>). Aktuelle Version: 1.6.1.</sub>
 
 ## Inhalt
 
+- [So funktioniert's](#so-funktionierts)
 - [Funktionen](#funktionen)
 - [Architektur](#architektur)
 - [Selbst hosten](#selbst-hosten)
 - [Backup und Wiederherstellung](#backup-und-wiederherstellung)
 - [Entwicklung](#entwicklung)
 - [Releases und Updates](#releases-und-updates)
+- [Versionen](#versionen)
 - [Projektstruktur](#projektstruktur)
 - [API](#api)
 - [Datenmodell](#datenmodell)
 - [Grenzen und Ideen](#grenzen-und-ideen)
 - [Lizenz](#lizenz)
 
+## So funktioniert's
+
+```mermaid
+flowchart LR
+  A["Projekt wählen"] --> B["Tagesplan<br/>Ziel · Zeitsystem · Anzahl Sessions"]
+  B --> C["Fokus-Timer<br/>25 / 52 / frei wählbar"]
+  C --> D["Feedback<br/>Active Recall · Sterne · Notiz"]
+  D --> E["Pause<br/>5 bzw. 17 min"]
+  E --> C
+  D --> F["Verlauf, Lernkalender<br/>und Statistik"]
+```
+
+1. **Planen:** Für jedes Lernprojekt legst du fest, was heute dran ist, mit welchem Zeitsystem du lernst und wie viele Sessions du schaffen willst.
+2. **Lernen:** Der Timer zählt die Fokuszeit herunter. Pausieren geht jederzeit, am Ende kommen Signalton und Benachrichtigung.
+3. **Reflektieren:** Direkt danach schreibst du aus dem Kopf auf, was hängengeblieben ist (Active Recall), und bewertest, wie konzentriert du warst.
+4. **Überblick:** Lernkalender und Statistik zeigen, wann, wie lange, wofür und wie gut du gelernt hast.
+
 ## Funktionen
 
 **Planen**
-- **Projekt-Board** mit den Spalten Aktiv, Pausiert und Abgeschlossen. Projekte wandern mit ← → zwischen den Spalten; über ⋯ lassen sie sich archivieren oder löschen.
+- **Projekt-Board** mit den Spalten Aktiv, Pausiert und Abgeschlossen. Projekte wandern mit ← → zwischen den Spalten, über ⋯ lassen sie sich archivieren oder löschen.
 - Spalten lassen sich per Tipp auf die Überschrift einklappen. Die App merkt sich das pro Gerät.
 - **Archiv:** Archivierte Projekte verschwinden vom Board, ihre Lernzeit zählt aber weiter in Lernkalender und Statistik. „Wiederherstellen“ bringt sie in ihre alte Spalte zurück.
 - **Tagesplan pro Projekt:** Ziel für heute, Zeitsystem und Anzahl geplanter Sessions, mit Fortschrittsanzeige und abhakbar.
@@ -47,7 +77,7 @@
 - **Verlauf** pro Projekt nach Kalendertag gruppiert, mit Tagesziel, geplant vs. geschafft und Details zu jeder Session.
 
 **Überblick**
-- **Lernkalender** im GitHub-Stil mit Lern-Serie in Tagen. Zeitraum per Filter: 3 Monate (Standard), 6 oder 12 Monate. Die Wahl merkt sich die App pro Gerät. Die Felder wachsen mit der verfügbaren Breite.
+- **Lernkalender** im GitHub-Stil mit Lern-Serie in Tagen. Der Filter zeigt 3 Monate (Standard), 6 oder 12 Monate, und die App merkt sich die Wahl pro Gerät. Die Felder wachsen mit der verfügbaren Breite, ein Tipp zeigt die Details des Tages.
 - **Statistik** nach Woche oder Monat, zum Durchblättern:
   - Fokuszeit pro Tag als Diagramm.
   - „Wofür du gelernt hast“: Lernzeit pro Projekt mit Anteil.
@@ -57,26 +87,25 @@
 **App**
 - Als **PWA** auf Handy und Desktop installierbar.
 - **Offline:** Ist der Server nicht erreichbar, zeigt die App den zuletzt bekannten Stand.
-- **Update-Hinweis:** Sobald eine neue Version auf dem Server liegt, erscheint unten links „Update verfügbar“. Ein Klick auf die Versionsnummer zeigt den Versionsverlauf.
+- **Updates:** Liegt eine neue Version auf dem Server, schwebt unten links „Update verfügbar“. Ein Tipp lädt sie. Die Versionsnummer selbst steht am Seitenende, ein Klick darauf öffnet den Versionsverlauf.
 
 ## Architektur
 
-```
-Browser / installierte PWA
-        │ HTTPS (Tailscale) bzw. http://127.0.0.1:8090
-        ▼
-┌───────────────────────────┐     ┌─────────────────────────────┐
-│ frontend                  │     │ ts-lern (optional)          │
-│ nginx-unprivileged :8080  │◄────│ eigener Tailnet-Knoten,     │
-│ React-Build + PWA         │     │ HTTPS per tailscale serve   │
-│ /api/* → backend          │     └─────────────────────────────┘
-└─────────────┬─────────────┘
-              ▼
-┌───────────────────────────┐
-│ backend                   │
-│ Node 24 + Express :3001   │
-│ better-sqlite3            │──► ./data/lern.sqlite (WAL)
-└───────────────────────────┘     ./data/backups/
+```mermaid
+flowchart TB
+  U["Browser / installierte PWA"]
+  TS["ts-lern (optional)<br/>eigener Tailnet-Knoten, HTTPS"]
+  FE["frontend<br/>nginx :8080 · React-Build + Service Worker"]
+  BE["backend<br/>Node 24 · Express :3001"]
+  DB[("data/lern.sqlite<br/>SQLite im WAL-Modus")]
+  BK[("data/backups/")]
+
+  U -->|"HTTPS über Tailscale"| TS
+  U -->|"http://127.0.0.1:8090"| FE
+  TS --> FE
+  FE -->|"/api/*"| BE
+  BE --> DB
+  BE -.->|"täglich per Cron (VACUUM INTO)"| BK
 ```
 
 | Teil | Technik |
@@ -155,7 +184,7 @@ docker compose start backend
 
 ## Entwicklung
 
-Backend und Frontend laufen lokal ohne Docker:
+Backend und Frontend laufen lokal ohne Docker (Node 22 oder neuer):
 
 ```bash
 # Terminal 1 – Backend auf :3001
@@ -172,10 +201,32 @@ npm run dev
 
 Zum Testen mit echten Daten ein Backup kopieren und das Backend darauf zeigen lassen: `DB_PATH=/pfad/zur/kopie.sqlite TZ=Europe/Berlin npm start`.
 
-Konventionen im Code:
+### Mit Demo-Daten ausprobieren
+
+`scripts/seed-demo.mjs` legt eine Datenbank mit acht ausgedachten Projekten und rund 250 Sessions über das letzte Jahr an, inklusive Tagesplan für heute und einer Lern-Serie. Das Skript schreibt nur in eine leere Datei und bricht ab, wenn dort schon Projekte stehen.
+
+```bash
+cd backend && npm ci && cd ..
+node scripts/seed-demo.mjs                                  # → backend/data/demo.sqlite
+cd backend && DB_PATH=data/demo.sqlite TZ=Europe/Berlin npm start
+```
+
+### Screenshots aktualisieren
+
+Die Bilder in dieser README erzeugt `scripts/readme-screenshots.mjs` per headless Chrome, ohne zusätzliche Pakete. Backend mit Demo-Daten und Frontend-Dev-Server müssen laufen:
+
+```bash
+node scripts/readme-screenshots.mjs                         # → docs/screenshots/
+```
+
+Andere Adresse oder Chrome-Pfad über `APP_URL` bzw. `CHROME_PATH`. Zur Sicherheit läuft das Skript nur, wenn die App die Demo-Daten zeigt. Die Session, die es für Timer und Feedback startet, verwirft es am Ende wieder.
+
+### Konventionen im Code
+
 - Kommentare auf Deutsch und eher zum *Warum* als zum *Was*.
 - Schemaänderungen nur additiv über `addColumnIfMissing` in `db.js`, damit bestehende Datenbanken beim nächsten Start mitwachsen.
 - Zeitstempel speichert SQLite in UTC (`datetime('now')`). Im Frontend immer über `parseDbDate` aus `constants.js` lesen.
+- Einstellungen pro Gerät (eingeklappte Spalten, Kalender-Zeitraum) liegen in `localStorage` und sind immer in `try/catch` gekapselt. Ohne Speicher gilt einfach der Standard.
 
 ## Releases und Updates
 
@@ -183,9 +234,26 @@ Die App hat eine eigene Versionsnummer mit Versionsverlauf. Für ein sichtbares 
 
 1. In `frontend/src/changelog.js` oben einen Eintrag ergänzen und `APP_VERSION` hochzählen.
 2. Dieselbe Version in `frontend/package.json` eintragen.
-3. Deployen: `git pull && docker compose up -d --build backend frontend`
+3. In dieser README den Abschnitt [Versionen](#versionen) und die Versionszeile unter den Screenshots anpassen.
+4. Deployen: `git pull && docker compose up -d --build backend frontend`
 
 Installierte Apps erkennen die neue Version beim Öffnen, beim Zurückholen in den Vordergrund und stündlich, und zeigen dann „Update verfügbar“. Reine Server-Änderungen ohne neues Frontend lösen keinen Hinweis aus.
+
+## Versionen
+
+| Version | Datum | Wichtigste Änderungen |
+|---|---|---|
+| **1.6.1** | 16.10.2026 | Statistik unten ruhiger und aufgeräumter, gleiche Breite in Wochen- und Monatsansicht |
+| 1.6.0 | 16.10.2026 | Lernkalender mit Zeitraum-Filter (3/6/12 Monate) und größeren Feldern; Statistik nach Projekt und Bewertung |
+| 1.5.2 | 16.10.2026 | Versionsnummer am Seitenende statt schwebend über dem Inhalt |
+| 1.5.0–1.5.1 | 16.10.2026 | Archiv, einklappbare Spalten, ⋯-Menü zum Archivieren und Löschen, „zuletzt gelernt“ auf den Karten |
+| 1.4.1 | 16.10.2026 | Update-Hinweis auch bei lange offener App; Server auf Node 24, reproduzierbare Builds |
+| 1.4.0 | 07.07.2026 | Mobile-Optimierung: weniger Rand, größere Tipp-Ziele |
+| 1.2–1.3 | 06.07.2026 | Lernkalender im GitHub-Stil mit Lern-Serie; Statistik zum Durchblättern |
+| 1.1.0 | 04.07.2026 | Offline-Modus, Update-Button und Versionsverlauf |
+| 1.0.0 | 13.06.2026 | Erste Version: Tagesplan, Fokus-Timer, Active Recall, Verlauf nach Kalendertag |
+
+Alle Einzelheiten stehen im Versionsverlauf der App (Klick auf die Versionsnummer) bzw. in [`frontend/src/changelog.js`](frontend/src/changelog.js).
 
 ## Projektstruktur
 
@@ -207,6 +275,9 @@ Installierte Apps erkennen die neue Version beim Öffnen, beim Zurückholen in d
 │       ├── constants.js       Zeitsysteme, Datumshilfen, Signalton, Benachrichtigungen
 │       ├── changelog.js       Version und Versionsverlauf
 │       └── components/        Board, Projekt-Dashboard, Timer, Feedback, Statistik, Lernkalender
+├── scripts/
+│   ├── seed-demo.mjs          Demo-Datenbank zum Ausprobieren
+│   └── readme-screenshots.mjs Screenshots für diese README
 ├── docs/screenshots/
 ├── docker-compose.yml
 └── ts-serve.json              tailscale-serve-Konfiguration für den Sidecar
@@ -246,10 +317,12 @@ Alle Endpunkte liegen unter `/api` und sprechen JSON. Fehler kommen als `{ "erro
 - Für eine Person gebaut: keine Konten, keine Anmeldung, keine Synchronisation zwischen mehreren Nutzern.
 - Oberfläche nur auf Deutsch, Zeitzone fest auf `Europe/Berlin`.
 - Auf Android kommt die Benachrichtigung am Timer-Ende nicht zuverlässig an: Chrome erlaubt dort kein `new Notification()`, und bei gesperrtem Bildschirm pausiert die Seite samt Timer-Ton.
+- Die Schriften (Lora, Source Sans 3) kommen noch von Google Fonts. Das ist die einzige Anfrage an einen fremden Server.
 - Keine automatisierten Tests und kein CI.
 
 **Ideen**
 - Timer-Ende per Web Push vom Server melden, damit es auch bei gesperrtem Handy ankommt.
+- Schriften selbst ausliefern statt über Google Fonts.
 - Beim Öffnen eines Projekts das Recall und den nächsten Schritt der letzten Session anzeigen.
 - Tagesplan automatisch abhaken, wenn alle geplanten Sessions geschafft sind.
 - Bewertungen zusätzlich nach Session-Länge auswerten (25 vs. 52 Minuten).
