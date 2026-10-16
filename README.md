@@ -1,58 +1,250 @@
 # Lern-PWA
 
-Persönlicher Lern-Tracker als installierbare PWA — Tagesplanung pro Projekt, Fokus-Timer, Active-Recall-Feedback und Verlauf. Läuft als Docker-Compose-Stack auf einem Raspberry Pi, erreichbar per Tailscale.
+**Lern-Sessions** ist ein selbst gehosteter Lern-Tracker als installierbare Web-App. Pro Lernprojekt planst du deinen Tag, lernst in festen Fokus-Phasen und hältst danach fest, was hängengeblieben ist. Läuft komplett auf eigener Hardware (bei mir ein Raspberry Pi 5), ohne Konto, ohne Tracking, ohne Cloud.
 
-## Was die App macht
+![Projekt-Board mit Lernkalender](docs/screenshots/board-desktop.png)
 
-- **Projekt-Board** (Kanban: Aktiv / Pausiert / Abgeschlossen) für alles, was gerade gelernt wird
-- **Tagesplan pro Projekt**: Ziel, Lernmethode, Anzahl geplanter Sessions — abhakbar
-- **Fokus-Timer** mit drei Zeitsystemen (25/5-Sprint, 52/17-Deep-Work, freier Timer), Pause/Weiter, Signalton + Browser-Benachrichtigung am Ende
-- **Überschriften-Check**: während der Session beliebig oft nutzbares Active-Recall-Tool (Vermutung vor dem Lesen festhalten)
-- **Feedback nach jeder Session**: Active-Recall-Text (was ist hängengeblieben, aus dem Kopf), Effizienz-Bewertung (1–5 Sterne), freie Notiz
-- **Verlauf** nach Kalendertag gruppiert, mit Detailansicht pro Session
-- **Lernkalender** im GitHub-Stil auf der Startseite (laufendes Jahr) mit Lern-Serie in Tagen
-- **Statistik-Ansicht** (Woche/Monat, durchblätterbar) mit Fokuszeit-Diagramm und Lernkalender für den Zeitraum
-- **Offene Sessions** (App zwischendurch geschlossen) lassen sich fortsetzen oder verwerfen
-- Als **PWA installierbar**, funktioniert offline (zeigt den letzten bekannten Stand, wenn der Pi nicht erreichbar ist)
-- **Update-Button** unten links, sobald eine neue Version bereitsteht, plus **Versionsverlauf** per Klick
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/projekt-handy.png" width="250" alt="Projekt mit Tagesplan und Verlauf"><br><sub>Tagesplan und Verlauf</sub></td>
+    <td align="center"><img src="docs/screenshots/timer-handy.png" width="250" alt="Fokus-Timer"><br><sub>Fokus-Timer</sub></td>
+    <td align="center"><img src="docs/screenshots/statistik-handy.png" width="250" alt="Wochenstatistik"><br><sub>Statistik</sub></td>
+  </tr>
+</table>
+
+<sub>Screenshots mit Demo-Daten.</sub>
+
+## Inhalt
+
+- [Funktionen](#funktionen)
+- [Architektur](#architektur)
+- [Selbst hosten](#selbst-hosten)
+- [Backup und Wiederherstellung](#backup-und-wiederherstellung)
+- [Entwicklung](#entwicklung)
+- [Releases und Updates](#releases-und-updates)
+- [Projektstruktur](#projektstruktur)
+- [API](#api)
+- [Datenmodell](#datenmodell)
+- [Grenzen und Ideen](#grenzen-und-ideen)
+
+## Funktionen
+
+**Planen**
+- **Projekt-Board** mit den Spalten Aktiv, Pausiert und Abgeschlossen. Projekte wandern mit ← → zwischen den Spalten; über ⋯ lassen sie sich archivieren oder löschen.
+- Spalten lassen sich per Tipp auf die Überschrift einklappen. Die App merkt sich das pro Gerät.
+- **Archiv:** Archivierte Projekte verschwinden vom Board, ihre Lernzeit zählt aber weiter in Lernkalender und Statistik. „Wiederherstellen“ bringt sie in ihre alte Spalte zurück.
+- **Tagesplan pro Projekt:** Ziel für heute, Zeitsystem und Anzahl geplanter Sessions, mit Fortschrittsanzeige und abhakbar.
+
+**Lernen**
+- **Fokus-Timer** mit drei Zeitsystemen: 25/5 (Sprint), 52/17 (Deep Work) oder frei wählbar (5–180 min). Mit Pause/Weiter, Signalton und Browser-Benachrichtigung am Ende. Bei 25/5 und 52/17 startet nach dem Feedback automatisch der Pausen-Timer.
+- Der Timer rechnet mit echten Zeitstempeln statt mitgezählten Sekunden. Er bleibt also korrekt, auch wenn der Browser den Tab drosselt oder das Handy schläft.
+- **Offene Sessions:** Wird die App mitten in einer Session geschlossen, lässt sich die Session später fortsetzen oder verwerfen.
+- **Überschriften-Check:** Während der Session vor dem Lesen eines Abschnitts kurz aufschreiben, was man darunter erwartet.
+
+**Reflektieren**
+- **Feedback nach jeder Session:** Active Recall (aus dem Kopf aufschreiben, was hängengeblieben ist), Bewertung von 1–5 Sternen und eine freie Notiz.
+- **Verlauf** pro Projekt nach Kalendertag gruppiert, mit Tagesziel, geplant vs. geschafft und Details zu jeder Session.
+
+**Überblick**
+- **Lernkalender** im GitHub-Stil über das laufende Jahr, mit Lern-Serie in Tagen.
+- **Statistik** nach Woche oder Monat, zum Durchblättern, mit Fokuszeit pro Tag.
+- Gezählt wird nur aktive Timer-Zeit, also ohne Pausen und gedeckelt auf die geplante Dauer. Wer den Timer nach dem Ende liegen lässt, bekommt das nicht als Lernzeit gutgeschrieben.
+
+**App**
+- Als **PWA** auf Handy und Desktop installierbar.
+- **Offline:** Ist der Server nicht erreichbar, zeigt die App den zuletzt bekannten Stand.
+- **Update-Hinweis:** Sobald eine neue Version auf dem Server liegt, erscheint unten links „Update verfügbar“. Ein Klick auf die Versionsnummer zeigt den Versionsverlauf.
 
 ## Architektur
 
 ```
-React + Vite (PWA)  →  nginx (nginx-unprivileged, non-root, :8080)
-                          │  proxy /api/ →
-                       Express-Backend (non-root, :3001)
-                          │
-                       better-sqlite3 (WAL-Modus, Foreign Keys, Indizes)
+Browser / installierte PWA
+        │ HTTPS (Tailscale) bzw. http://127.0.0.1:8090
+        ▼
+┌───────────────────────────┐     ┌─────────────────────────────┐
+│ frontend                  │     │ ts-lern (optional)          │
+│ nginx-unprivileged :8080  │◄────│ eigener Tailnet-Knoten,     │
+│ React-Build + PWA         │     │ HTTPS per tailscale serve   │
+│ /api/* → backend          │     └─────────────────────────────┘
+└─────────────┬─────────────┘
+              ▼
+┌───────────────────────────┐
+│ backend                   │
+│ Node 24 + Express :3001   │
+│ better-sqlite3            │──► ./data/lern.sqlite (WAL)
+└───────────────────────────┘     ./data/backups/
 ```
 
-- **Frontend:** `frontend/` — React 18, Vite, `vite-plugin-pwa` (Manifest, Service Worker, Offline-Caching für `/api/*` per NetworkFirst)
-- **Backend:** `backend/` — Node 24, Express, better-sqlite3, keine ORM, alle Queries parametrisiert
-- **Deployment:** `docker-compose.yml`, drei Container (`backend`, `frontend`, Tailscale-Sidecar `ts-lern`), Ressourcen-Limits gesetzt (Pi teilt sich RAM mit einem k3s-Cluster nebenan)
-- **Erreichbarkeit:** `ts-lern` ist ein eigener Tailnet-Knoten (`lern-pwa`) und reicht HTTPS per `ts-serve.json` an nginx durch. Der Auth-Key steht als `TS_AUTHKEY` in `.env` (nicht im Repo)
-- **Builds:** beide Dockerfiles bauen per `npm ci` exakt aus den Lockfiles
-- **Daten:** `./data/lern.sqlite` (Bind-Mount), `TZ=Europe/Berlin` ist wichtig für korrekte Tagesgrenzen in Statistik/Tagesplan
+| Teil | Technik |
+|---|---|
+| Frontend | React 18, Vite 5, `vite-plugin-pwa` (Manifest, Service Worker, NetworkFirst-Cache für `GET /api/*`) |
+| Backend | Node 24, Express 4, better-sqlite3. Kein ORM, alle Queries parametrisiert |
+| Datenbank | SQLite im WAL-Modus, Foreign Keys an, Schema-Migrationen beim Start (`backend/src/db.js`) |
+| Betrieb | Docker Compose, beide Container non-root, mit Healthchecks und Ressourcen-Limits |
+| Zugriff | Tailscale-Sidecar mit eigenem Hostnamen und HTTPS-Zertifikat, oder lokal über `127.0.0.1:8090` |
 
-## Backup
+Das Backend ist nie direkt erreichbar, nur über den nginx-Proxy im Frontend-Container. Dadurch laufen alle Anfragen über denselben Origin, und das Backend braucht kein CORS.
 
-Tägliches Backup per Cronjob (03:30), Script `backend/src/backup.js`:
-- `VACUUM INTO` erzeugt eine konsistente Single-File-Snapshot-Datei — unabhängig vom aktuellen WAL-Zustand
-- Ablage in `data/backups/`, 14-Tage-Rotation
-- Manuell auslösen: `docker compose exec backend node src/backup.js`
+## Selbst hosten
 
-## Lokal starten
+> [!WARNING]
+> Die App hat **keine Anmeldung**. Wer sie im Browser erreicht, kann alle Daten lesen und löschen. Betreibe sie nur in einem privaten Netz oder hinter Tailscale/VPN, nie offen im Internet.
+
+**Voraussetzungen:** Docker mit Compose-Plugin. Läuft auf arm64 (Raspberry Pi) und x86_64.
 
 ```bash
+git clone https://github.com/Guppy997/Lern-PWA.git
+cd Lern-PWA
+mkdir -p data        # vorher anlegen, sonst legt Docker den Ordner als root an
 docker compose up -d --build backend frontend
 ```
 
-Frontend danach unter `http://127.0.0.1:8090` erreichbar (Backend ist nicht direkt exponiert, nur intern über nginx-Proxy). Den Tailscale-Sidecar braucht man lokal nicht — ohne `TS_AUTHKEY` in `.env` startet er ohnehin nicht.
+Die App läuft danach unter `http://127.0.0.1:8090`. Der Port ist absichtlich nur an localhost gebunden.
 
-Für Frontend-Entwicklung mit Hot Reload:
-```bash
-cd frontend && npm install && npm run dev
+Der Backend-Container läuft als User `node` (UID 1000) und muss in `./data` schreiben dürfen. Gehört der Ordner einem anderen User, hilft `sudo chown 1000:1000 data`.
+
+### Zugriff über Tailscale (optional)
+
+Der Service `ts-lern` hängt die App als eigenen Knoten `lern-pwa` in dein Tailnet und stellt sie per HTTPS bereit (`https://lern-pwa.<dein-tailnet>.ts.net`). Ein echtes HTTPS-Zertifikat ist für die PWA-Installation auf dem Handy nötig.
+
+1. In der Tailscale-Admin-Konsole einen Auth-Key erzeugen: wiederverwendbar, ephemeral, mit Tag `tag:pwa-sidecar`. Der Tag muss in den ACLs einen Owner haben.
+2. Key in `.env` eintragen (die Datei ist in `.gitignore`):
+   ```bash
+   TS_AUTHKEY=tskey-auth-…
+   ```
+3. Alles starten: `docker compose up -d --build`
+
+### Konfiguration
+
+| Variable | Wo | Standard | Zweck |
+|---|---|---|---|
+| `TZ` | backend | `Europe/Berlin` (in Compose gesetzt) | Tagesgrenzen für Tagesplan, Verlauf und Statistik. Das Backend startet bewusst nicht, wenn sie anders gesetzt ist. |
+| `DB_PATH` | backend | `/app/data/lern.sqlite` im Container, sonst `backend/data/lern.sqlite` | Pfad zur SQLite-Datei |
+| `PORT` | backend | `3001` | Port des Backends im Container |
+| `BACKUP_DIR` | backup.js | `<DB-Ordner>/backups` | Ziel für Backups |
+| `BACKUP_KEEP_DAYS` | backup.js | `14` | Wie lange Backups behalten werden |
+| `TS_AUTHKEY` | ts-lern | – | Tailscale-Auth-Key für den Sidecar |
+| `VITE_API_PROXY_TARGET` | Vite (Entwicklung) | `http://localhost:3001` | Ziel für `/api` im Dev-Server |
+
+## Backup und Wiederherstellung
+
+`backend/src/backup.js` erzeugt mit `VACUUM INTO` einen konsistenten Snapshot der Datenbank. Anders als ein einfaches `cp` enthält er auch Änderungen, die noch in der WAL-Datei stehen. Backups landen in `data/backups/lern-YYYY-MM-DD.sqlite` und werden nach 14 Tagen gelöscht.
+
+Täglich per Cron, zum Beispiel um 03:30:
+
+```cron
+30 3 * * * cd /pfad/zu/Lern-PWA && docker compose exec -T backend node src/backup.js >> backup.log 2>&1
 ```
 
-## Stand
+Manuell: `docker compose exec backend node src/backup.js`
 
-Erste Version 13.06.2026 (großer Umbau: direkter Start ohne Session-Launcher, Verlauf nach Kalendertag). Härtungsrunde 04.07.2026: Backup-Strategie, Foreign Keys, non-root Container, Ressourcen-Limits, Offline-Fähigkeit, Update-Button + Versionsverlauf. 06.–07.07.2026 (v1.2–1.4): Lernkalender, Statistik zum Blättern, Mobile-Feinschliff, Tailscale-Sidecar. Wartung 16.10.2026: Node 24, better-sqlite3 12, reproduzierbare Builds. Details siehe `frontend/src/changelog.js` (manuell gepflegt, kein CI in diesem Projekt).
+Die Backups liegen auf demselben Datenträger wie die Datenbank. Kopiere `data/backups/` regelmäßig zusätzlich auf ein anderes Gerät.
+
+**Wiederherstellen:**
+
+```bash
+docker compose stop backend
+cp data/backups/lern-2026-10-15.sqlite data/lern.sqlite
+rm -f data/lern.sqlite-wal data/lern.sqlite-shm
+docker compose start backend
+```
+
+## Entwicklung
+
+Backend und Frontend laufen lokal ohne Docker:
+
+```bash
+# Terminal 1 – Backend auf :3001
+cd backend
+npm ci
+mkdir -p data
+TZ=Europe/Berlin npm start
+
+# Terminal 2 – Frontend mit Hot Reload auf :5173, /api wird an :3001 weitergereicht
+cd frontend
+npm ci
+npm run dev
+```
+
+Zum Testen mit echten Daten ein Backup kopieren und das Backend darauf zeigen lassen: `DB_PATH=/pfad/zur/kopie.sqlite TZ=Europe/Berlin npm start`.
+
+Konventionen im Code:
+- Kommentare auf Deutsch und eher zum *Warum* als zum *Was*.
+- Schemaänderungen nur additiv über `addColumnIfMissing` in `db.js`, damit bestehende Datenbanken beim nächsten Start mitwachsen.
+- Zeitstempel speichert SQLite in UTC (`datetime('now')`). Im Frontend immer über `parseDbDate` aus `constants.js` lesen.
+
+## Releases und Updates
+
+Die App hat eine eigene Versionsnummer mit Versionsverlauf. Für ein sichtbares Release:
+
+1. In `frontend/src/changelog.js` oben einen Eintrag ergänzen und `APP_VERSION` hochzählen.
+2. Dieselbe Version in `frontend/package.json` eintragen.
+3. Deployen: `git pull && docker compose up -d --build backend frontend`
+
+Installierte Apps erkennen die neue Version beim Öffnen, beim Zurückholen in den Vordergrund und stündlich, und zeigen dann „Update verfügbar“. Reine Server-Änderungen ohne neues Frontend lösen keinen Hinweis aus.
+
+## Projektstruktur
+
+```
+.
+├── backend/
+│   ├── Dockerfile
+│   └── src/
+│       ├── index.js           Express-App, TZ-Check, zentrale Fehlerbehandlung
+│       ├── db.js              Verbindung, Schema, Migrationen, WAL-Checkpoints
+│       ├── backup.js          Backup-Skript (VACUUM INTO + Rotation)
+│       └── routes/            projects.js, sessions.js, stats.js
+├── frontend/
+│   ├── Dockerfile, nginx.conf
+│   ├── vite.config.js         PWA-Manifest, Service Worker, Offline-Cache
+│   └── src/
+│       ├── App.jsx            Ablauf: Board → Projekt → Timer → Feedback → Pause
+│       ├── api.js             Fetch-Wrapper mit deutschen Fehlermeldungen
+│       ├── constants.js       Zeitsysteme, Datumshilfen, Signalton, Benachrichtigungen
+│       ├── changelog.js       Version und Versionsverlauf
+│       └── components/        Board, Projekt-Dashboard, Timer, Feedback, Statistik, Lernkalender
+├── docs/screenshots/
+├── docker-compose.yml
+└── ts-serve.json              tailscale-serve-Konfiguration für den Sidecar
+```
+
+## API
+
+Alle Endpunkte liegen unter `/api` und sprechen JSON. Fehler kommen als `{ "error": "…" }` mit passendem Statuscode zurück.
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| `GET` | `/health` | Healthcheck |
+| `GET` | `/projects` | Alle Projekte inkl. Fokuszeit, Session-Anzahl, letzter Aktivität |
+| `POST` | `/projects` | Projekt anlegen: `{ name }` |
+| `PATCH` | `/projects/:id` | Spalte wechseln und/oder archivieren: `{ status?: "active" \| "paused" \| "done", archived?: boolean }` |
+| `DELETE` | `/projects/:id` | Projekt samt Tagesplänen und Sessions löschen |
+| `GET` | `/projects/:id` | Projekt mit heutigem Plan, allen Tagesplänen, Sessions und Summen |
+| `POST` | `/projects/:id/day-plan` | Heutigen Plan anlegen oder ersetzen: `{ goal, method, plannedSessions }` |
+| `PATCH` | `/projects/:id/day-plan` | Heutigen Plan abhaken oder wieder öffnen: `{ completed }` |
+| `POST` | `/sessions` | Session starten: `{ projectId, dayPlanId?, plannedMinutes }` |
+| `PATCH` | `/sessions/:id` | Session mit Feedback abschließen: `{ focusSeconds, pausedSeconds, efficiencyRating, recallText, feedbackNote, methodData }` |
+| `DELETE` | `/sessions/:id` | Laufende Session verwerfen oder aus dem Verlauf löschen |
+| `GET` | `/stats?period=week\|month\|currentYear&offset=0` | Fokuszeit pro Tag; `offset=-1` ist die vorherige Woche bzw. der vorherige Monat |
+
+## Datenmodell
+
+| Tabelle | Wichtige Spalten |
+|---|---|
+| `projects` | `name` (eindeutig), `status` (`active`/`paused`/`done`), `archived_at` |
+| `day_plans` | `project_id`, `date` (lokales Datum, eindeutig pro Projekt), `goal`, `method` (`sprint`, `deep` oder `free:<Minuten>`), `planned_sessions`, `completed_at` |
+| `sessions` | `project_id`, `day_plan_id`, `planned_minutes`, `started_at`, `ended_at` (leer = offene Session), `focus_seconds`, `paused_seconds`, `efficiency_rating`, `recall_text`, `feedback_note`, `method_data` (Überschriften-Checks als JSON) |
+
+## Grenzen und Ideen
+
+**Bekannte Grenzen**
+- Für eine Person gebaut: keine Konten, keine Anmeldung, keine Synchronisation zwischen mehreren Nutzern.
+- Oberfläche nur auf Deutsch, Zeitzone fest auf `Europe/Berlin`.
+- Auf Android kommt die Benachrichtigung am Timer-Ende nicht zuverlässig an: Chrome erlaubt dort kein `new Notification()`, und bei gesperrtem Bildschirm pausiert die Seite samt Timer-Ton.
+- Keine automatisierten Tests und kein CI.
+
+**Ideen**
+- Timer-Ende per Web Push vom Server melden, damit es auch bei gesperrtem Handy ankommt.
+- Beim Öffnen eines Projekts das Recall und den nächsten Schritt der letzten Session anzeigen.
+- Tagesplan automatisch abhaken, wenn alle geplanten Sessions geschafft sind.
+- Sterne-Bewertungen in der Statistik auswerten, z. B. nach Tageszeit und Session-Länge.
