@@ -1,8 +1,16 @@
 // Manuell gepflegt — bei jedem sichtbaren Release hier oben einen neuen Eintrag
 // ergänzen und APP_VERSION (+ "version" in package.json) hochzählen.
-export const APP_VERSION = '1.5.1';
+export const APP_VERSION = '1.5.2';
 
 export const CHANGELOG = [
+  {
+    version: '1.5.2',
+    date: '2026-10-16',
+    notes: [
+      'Die Versionsnummer steht jetzt ganz unten auf der Seite, statt beim Scrollen über dem Inhalt zu schweben',
+      'Nur der Hinweis "Update verfügbar" schwebt weiter unten links, solange ein Update bereitliegt'
+    ]
+  },
   {
     version: '1.5.1',
     date: '2026-10-16',

@@ -1,9 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { APP_VERSION, CHANGELOG } from '../changelog.js';
 
 export default function AppFooter() {
   const [historyOpen, setHistoryOpen] = useState(false);
+  const historyRef = useRef(null);
+
+  // Der Footer steht ganz unten auf der Seite — ohne Scrollen würde der
+  // Versionsverlauf unterhalb des sichtbaren Bereichs aufklappen
+  useEffect(() => {
+    if (historyOpen) historyRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [historyOpen]);
   const {
     needRefresh: [needRefresh],
     updateServiceWorker
@@ -24,42 +31,45 @@ export default function AppFooter() {
   });
 
   return (
-    <div className="app-footer">
+    <>
+      {/* Schwebt unten links (position: fixed), aber nur solange ein Update bereitliegt */}
       {needRefresh && (
         <button type="button" className="update-badge" onClick={() => updateServiceWorker(true)}>
           ↻ Update verfügbar
         </button>
       )}
 
-      <button
-        type="button"
-        className="version-badge"
-        onClick={() => setHistoryOpen((o) => !o)}
-        aria-expanded={historyOpen}
-      >
-        v{APP_VERSION}
-      </button>
+      <footer className="app-footer">
+        <button
+          type="button"
+          className="version-badge"
+          onClick={() => setHistoryOpen((o) => !o)}
+          aria-expanded={historyOpen}
+        >
+          v{APP_VERSION}
+        </button>
 
-      {historyOpen && (
-        <div className="version-history">
-          <p className="hint-label">Versionsverlauf</p>
-          <ul>
-            {CHANGELOG.map((entry) => (
-              <li key={entry.version}>
-                <div className="version-history-head">
-                  <strong>v{entry.version}</strong>
-                  <span className="version-date">{entry.date}</span>
-                </div>
-                <ul>
-                  {entry.notes.map((note, i) => (
-                    <li key={i}>{note}</li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
+        {historyOpen && (
+          <div className="version-history" ref={historyRef}>
+            <p className="hint-label">Versionsverlauf</p>
+            <ul>
+              {CHANGELOG.map((entry) => (
+                <li key={entry.version}>
+                  <div className="version-history-head">
+                    <strong>v{entry.version}</strong>
+                    <span className="version-date">{entry.date}</span>
+                  </div>
+                  <ul>
+                    {entry.notes.map((note, i) => (
+                      <li key={i}>{note}</li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </footer>
+    </>
   );
 }

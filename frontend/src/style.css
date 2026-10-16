@@ -50,8 +50,22 @@ body {
 
 /* #root ist das Flex-Element von body: ohne min-width: 0 wird es mindestens so
    breit wie sein breitester Inhalt (Jahres-Lernkalender, ~780 px) und die ganze
-   Seite läuft auf dem Handy seitlich über, statt dass nur der Kalender scrollt */
-#root { min-width: 0; }
+   Seite läuft auf dem Handy seitlich über, statt dass nur der Kalender scrollt.
+   Als Spalte (so hoch wie der Bildschirm) schiebt margin-top: auto den
+   Versions-Footer ans Seitenende — auf kurzen Seiten an den unteren Rand, auf
+   langen hinter den Inhalt, nie darüber. */
+#root {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* Die Views zentrieren sich per margin: auto — vertikal würde das in der Spalte
+   den freien Platz aufteilen, darum oben bündig halten (horizontal bleibt mittig) */
+#root > .card,
+#root > .board {
+  margin-top: 0;
+  margin-bottom: 0;
+}
 
 button, a {
   -webkit-tap-highlight-color: transparent;
@@ -304,9 +318,6 @@ button.danger:hover { color: #93362b; }
   flex-direction: column;
   gap: 24px;
   margin: auto;
-  /* Platz für das fixierte Versions-Badge unten links (.app-footer), sonst
-     verdeckt es beim Runterscrollen den letzten Eintrag (Archiv) */
-  padding-bottom: 44px;
   animation: rise 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .board-header {
@@ -844,11 +855,10 @@ button.danger:hover { color: #93362b; }
 .chart-dense .chart-label { display: none; }
 
 /* Footer: Versionsverlauf + Update-Hinweis */
+/* Versions-Footer steht im Seitenfluss ganz unten (siehe #root) */
 .app-footer {
-  position: fixed;
-  left: 16px;
-  bottom: calc(16px + env(safe-area-inset-bottom));
-  z-index: 50;
+  margin-top: auto;
+  padding-top: 32px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -865,7 +875,12 @@ button.danger:hover { color: #93362b; }
   box-shadow: var(--shadow-soft);
 }
 .version-badge:hover { border-color: var(--accent); color: var(--accent-strong); background: var(--accent-soft); }
+/* Nur der Update-Hinweis schwebt — er ist selten, soll aber sofort auffallen */
 .update-badge {
+  position: fixed;
+  left: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 50;
   background: var(--break-accent);
   color: #fffaf3;
   font-size: 0.8rem;
