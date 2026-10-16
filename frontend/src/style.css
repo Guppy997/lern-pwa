@@ -779,9 +779,22 @@ button.danger:hover { color: #93362b; }
 .break-card .progress-ring-content .ring-time { color: var(--break-accent); }
 
 /* Stats view */
-.stats-card { max-width: 760px; }
+/* Feste Breite statt "so breit wie der Inhalt": sonst ist die Karte in Wochen-
+   und Monatsansicht unterschiedlich breit und springt beim Umschalten. Auf
+   schmalen Screens begrenzt max-width auf die verfügbare Breite. */
+.stats-card { width: 760px; max-width: 100%; }
+
+/* Untere Abschnitte bewusst ruhig: eine gedämpfte Akzentfarbe, dünne Linien,
+   keine Flächen — die Zahlen sollen sprechen, nicht die Deko */
+.stats-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-soft);
+}
 .stats-section-heading {
-  margin: 12px 0 -6px;
+  margin: 0;
   font-family: var(--serif);
   font-style: italic;
   font-size: 1.05rem;
@@ -790,37 +803,37 @@ button.danger:hover { color: #93362b; }
 }
 
 /* Statistik: Lernzeit pro Projekt */
-.project-breakdown { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+.project-breakdown { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
 .project-breakdown li { display: flex; flex-direction: column; gap: 6px; }
-.breakdown-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
-.breakdown-name { font-weight: 600; color: var(--text); min-width: 0; }
-.breakdown-tag { margin-left: 8px; font-size: 0.72rem; font-weight: 500; color: var(--muted); }
-.breakdown-time { font-family: var(--serif); color: var(--text); white-space: nowrap; }
-.breakdown-track { height: 10px; border-radius: 999px; background: var(--border-soft); overflow: hidden; }
-.breakdown-bar { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--gold), var(--accent)); }
-.breakdown-meta { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); }
+.breakdown-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 0.92rem; }
+.breakdown-name { color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.breakdown-tag { margin-left: 6px; font-size: 0.72rem; color: var(--muted); }
+.breakdown-time { color: var(--text-soft); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.breakdown-share { display: inline-block; min-width: 3.2em; text-align: right; font-size: 0.78rem; color: var(--muted); }
+.breakdown-track { height: 4px; border-radius: 999px; background: var(--border-soft); overflow: hidden; }
+.breakdown-bar { height: 100%; border-radius: inherit; background: rgba(205, 111, 77, 0.55); }
 
 /* Statistik: Auswertung der Sterne-Bewertungen */
-.rating-block { display: flex; flex-direction: column; gap: 14px; }
-.rating-summary { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
-.rating-value { font-family: var(--serif); font-size: 2rem; line-height: 1; color: var(--text); }
-.rating-star { color: var(--gold); }
-.rating-caption { color: var(--muted); font-size: 0.85rem; }
-.rating-daytimes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.rating-block { display: flex; flex-direction: column; gap: 8px; }
+.rating-summary { margin: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 10px; }
+.rating-value { font-family: var(--serif); font-size: 1.3rem; color: var(--text); }
+.rating-star { color: var(--gold); font-size: 0.85em; }
+.rating-caption { color: var(--muted); font-size: 0.82rem; }
+.rating-daytimes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .rating-daytimes li {
   display: grid;
-  /* feste Spalten, damit Sterne/Wert/Anzahl über alle Zeilen bündig stehen */
-  grid-template-columns: minmax(0, 1fr) 96px 32px 36px;
-  align-items: center;
+  /* feste Spalten, damit Wert und Anzahl über alle Zeilen bündig stehen */
+  grid-template-columns: minmax(0, 1fr) 64px 40px;
+  align-items: baseline;
   gap: 12px;
-  padding: 8px 12px;
-  border-radius: 12px;
+  padding: 9px 0;
+  border-top: 1px solid var(--border-soft);
+  font-size: 0.92rem;
 }
-.rating-daytimes li.best { background: var(--accent-soft); }
-.rating-daytime-label { font-weight: 600; color: var(--text-soft); }
-.rating-daytime-value { font-family: var(--serif); color: var(--text); }
-.rating-best { display: block; font-size: 0.7rem; font-weight: 600; color: var(--accent-strong); }
-.rating-daytime-count { text-align: right; font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+.rating-daytime-label { color: var(--text-soft); }
+.rating-best { margin-left: 8px; font-size: 0.75rem; color: var(--accent-strong); }
+.rating-daytime-value { text-align: right; color: var(--text); font-variant-numeric: tabular-nums; }
+.rating-daytime-count { text-align: right; font-size: 0.78rem; color: var(--muted); }
 .period-toggle { display: flex; gap: 10px; }
 .period-toggle button { flex: 1; }
 

@@ -34,12 +34,8 @@ const periodLabel = (period, days) => {
 
 const formatRating = (value) => value.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
-const ratingStars = (value) => {
-  const full = Math.round(value);
-  return '★'.repeat(full) + '☆'.repeat(5 - full);
-};
-
-// Wofür im Zeitraum gelernt wurde: ein Balken pro Projekt, Anteil an der Gesamtzeit
+// Wofür im Zeitraum gelernt wurde: pro Projekt eine Zeile + dünner Anteilsbalken.
+// Bewusst schlicht — Sessions-Anzahl steht im Tooltip, nicht als eigene Zeile.
 function ProjectBreakdown({ projects, totalSeconds }) {
   if (projects.length === 0) return <p className="empty-hint">In diesem Zeitraum keine Sessions.</p>;
   return (
@@ -47,20 +43,19 @@ function ProjectBreakdown({ projects, totalSeconds }) {
       {projects.map((p) => {
         const share = totalSeconds ? Math.round((p.focus_seconds / totalSeconds) * 100) : 0;
         return (
-          <li key={p.id}>
+          <li key={p.id} title={`${p.session_count} ${p.session_count === 1 ? 'Session' : 'Sessions'}`}>
             <div className="breakdown-head">
               <span className="breakdown-name">
                 {p.name}
                 {p.archived && <span className="breakdown-tag">archiviert</span>}
               </span>
-              <span className="breakdown-time">{formatDuration(p.focus_seconds)}</span>
+              <span className="breakdown-time">
+                {formatDuration(p.focus_seconds)}
+                <span className="breakdown-share">{share} %</span>
+              </span>
             </div>
             <div className="breakdown-track">
               <div className="breakdown-bar" style={{ width: `${Math.max(2, share)}%` }} />
-            </div>
-            <div className="breakdown-meta">
-              <span>{p.session_count} {p.session_count === 1 ? 'Session' : 'Sessions'}</span>
-              <span>{share} %</span>
             </div>
           </li>
         );
@@ -80,21 +75,20 @@ function RatingSummary({ rating }) {
     : null;
   return (
     <div className="rating-block">
-      <div className="rating-summary">
-        <span className="rating-value"><span className="rating-star">★</span> {formatRating(rating.average)}</span>
+      <p className="rating-summary">
+        <span className="rating-value">Ø {formatRating(rating.average)} <span className="rating-star">★</span></span>
         <span className="rating-caption">
-          Ø Bewertung aus {rating.count} {rating.count === 1 ? 'Session' : 'Sessions'}
+          aus {rating.count} {rating.count === 1 ? 'bewerteten Session' : 'bewerteten Sessions'}
         </span>
-      </div>
+      </p>
       <ul className="rating-daytimes">
         {rating.byDaytime.map((t) => (
-          <li key={t.key} className={best?.key === t.key ? 'best' : ''}>
+          <li key={t.key}>
             <span className="rating-daytime-label">
               {t.label}
-              {best?.key === t.key && <small className="rating-best">beste Zeit</small>}
+              {best?.key === t.key && <span className="rating-best">beste Zeit</span>}
             </span>
-            <span className="rating">{ratingStars(t.average)}</span>
-            <span className="rating-daytime-value">{formatRating(t.average)}</span>
+            <span className="rating-daytime-value">{formatRating(t.average)} <span className="rating-star">★</span></span>
             <span className="rating-daytime-count">{t.count}×</span>
           </li>
         ))}
@@ -210,11 +204,15 @@ export default function StatsView({ onBack }) {
 
       {/* Fallbacks: offline kann noch eine zwischengespeicherte Antwort vom
           Server vor v1.6.0 kommen, die diese Felder nicht kennt */}
-      <h2 className="stats-section-heading">Wofür du gelernt hast</h2>
-      <ProjectBreakdown projects={stats.projects || []} totalSeconds={stats.totalFocusSeconds} />
+      <section className="stats-section">
+        <h2 className="stats-section-heading">Wofür du gelernt hast</h2>
+        <ProjectBreakdown projects={stats.projects || []} totalSeconds={stats.totalFocusSeconds} />
+      </section>
 
-      <h2 className="stats-section-heading">Wie es lief</h2>
-      <RatingSummary rating={stats.rating || { count: 0, byDaytime: [] }} />
+      <section className="stats-section">
+        <h2 className="stats-section-heading">Wie es lief</h2>
+        <RatingSummary rating={stats.rating || { count: 0, byDaytime: [] }} />
+      </section>
     </div>
   );
 }

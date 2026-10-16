@@ -1,8 +1,16 @@
 // Manuell gepflegt — bei jedem sichtbaren Release hier oben einen neuen Eintrag
 // ergänzen und APP_VERSION (+ "version" in package.json) hochzählen.
-export const APP_VERSION = '1.6.0';
+export const APP_VERSION = '1.6.1';
 
 export const CHANGELOG = [
+  {
+    version: '1.6.1',
+    date: '2026-10-16',
+    notes: [
+      'Statistik: "Wofür du gelernt hast" und "Wie es lief" sind jetzt ruhiger und aufgeräumter, mit dünnen Balken in einer Farbe, weniger Text und ohne farbige Flächen',
+      'Fix: Die Statistik ist in Wochen- und Monatsansicht gleich breit und springt beim Umschalten nicht mehr'
+    ]
+  },
   {
     version: '1.6.0',
     date: '2026-10-16',
