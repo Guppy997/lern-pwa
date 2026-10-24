@@ -131,7 +131,7 @@ Das Backend ist nie direkt erreichbar, nur über den nginx-Proxy im Frontend-Con
 
 - **Daten bleiben auf eigener Hardware:** Alles liegt in einer SQLite-Datei auf dem eigenen Server. Kein Konto, keine Cookies, keine Analyse-Tools.
 - **Keine Anmeldung:** Die App ist für eine Person gebaut. Geschützt wird sie über das Netz: Der Port ist nur an `127.0.0.1` gebunden, von außen geht es nur über Tailscale.
-- **Eine fremde Anfrage:** Die Schriften kommen noch von Google Fonts. Sonst spricht die App nur mit dem eigenen Server.
+- **Keine fremden Server:** Auch die Schriften (Lora, Source Sans 3) liefert die App selbst aus. Sie spricht nur mit dem eigenen Server.
 - **Backend abgeschirmt:** Erreichbar nur über den nginx-Proxy im Frontend-Container, nie direkt.
 - **SQL** ausschließlich mit Platzhaltern, Eingaben werden serverseitig geprüft (zum Beispiel Bewertung 1–5, Fokuszeit höchstens die geplante Dauer).
 - **Container** laufen ohne Root-Rechte (`node` bzw. `nginx-unprivileged`), mit Healthchecks und CPU- und RAM-Limits.
@@ -358,12 +358,10 @@ Alle Endpunkte liegen unter `/api` und sprechen JSON. Fehler kommen als `{ "erro
 - Für eine Person gebaut: keine Konten, keine Anmeldung, keine Synchronisation zwischen mehreren Nutzern.
 - Oberfläche nur auf Deutsch, Zeitzone fest auf `Europe/Berlin`.
 - Auf Android kommt die Benachrichtigung am Timer-Ende nicht zuverlässig an: Chrome erlaubt dort kein `new Notification()`, und bei gesperrtem Bildschirm pausiert die Seite samt Timer-Ton.
-- Die Schriften (Lora, Source Sans 3) kommen noch von Google Fonts. Das ist die einzige Anfrage an einen fremden Server.
 - Automatisierte Tests gibt es für die API, noch nicht für die Oberfläche.
 
 **Ideen**
 - Timer-Ende per Web Push vom Server melden, damit es auch bei gesperrtem Handy ankommt.
-- Schriften selbst ausliefern statt über Google Fonts.
 - Beim Öffnen eines Projekts das Recall und den nächsten Schritt der letzten Session anzeigen.
 - Tagesplan automatisch abhaken, wenn alle geplanten Sessions geschafft sind.
 - Bewertungen zusätzlich nach Session-Länge auswerten (25 vs. 52 Minuten).
