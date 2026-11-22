@@ -123,7 +123,7 @@ flowchart TB
 | Datenbank | SQLite im WAL-Modus, Foreign Keys an, Schema-Migrationen beim Start (`backend/src/db.js`) |
 | Betrieb | Docker Compose, beide Container non-root, mit Healthchecks und Ressourcen-Limits |
 | Zugriff | Tailscale-Sidecar mit eigenem Hostnamen und HTTPS-Zertifikat, oder lokal über `127.0.0.1:8090` |
-| Tests und CI | Vitest und Supertest für die API, GitHub Actions mit Node 22 und 24, Dependabot |
+| Tests und CI | Vitest und Supertest für die API, GitHub Actions mit Node 22 und 24, Renovate und Dependabot-Warnungen |
 
 Das Backend ist nie direkt erreichbar, nur über den nginx-Proxy im Frontend-Container. Dadurch laufen alle Anfragen über denselben Origin, und das Backend braucht kein CORS.
 
@@ -135,7 +135,7 @@ Das Backend ist nie direkt erreichbar, nur über den nginx-Proxy im Frontend-Con
 - **Backend abgeschirmt:** Erreichbar nur über den nginx-Proxy im Frontend-Container, nie direkt.
 - **SQL** ausschließlich mit Platzhaltern, Eingaben werden serverseitig geprüft (zum Beispiel Bewertung 1–5, Fokuszeit höchstens die geplante Dauer).
 - **Container** laufen ohne Root-Rechte (`node` bzw. `nginx-unprivileged`), mit Healthchecks und CPU- und RAM-Limits.
-- **Abhängigkeiten:** Dependabot schlägt wöchentlich Updates für npm-Pakete und GitHub Actions vor, die CI testet jeden Push.
+- **Abhängigkeiten:** Renovate schlägt Updates für npm-Pakete, GitHub Actions und Docker-Images vor, Dependabot meldet bekannte Sicherheitslücken, die CI testet jeden Push.
 
 Sicherheitslücken bitte vertraulich melden, wie in [`SECURITY.md`](SECURITY.md) beschrieben.
 
@@ -293,8 +293,7 @@ Alle Einzelheiten stehen im Versionsverlauf der App (Klick auf die Versionsnumme
 ```
 .
 ├── .github/
-│   ├── workflows/ci.yml       Tests und Build bei jedem Push (Node 22 und 24)
-│   └── dependabot.yml         Wöchentliche Updates für npm und GitHub Actions
+│   └── workflows/ci.yml       Tests und Build bei jedem Push (Node 22 und 24)
 ├── backend/
 │   ├── Dockerfile
 │   ├── vitest.config.js       Testumgebung: TZ Europe/Berlin, Datenbank im Arbeitsspeicher
@@ -319,6 +318,7 @@ Alle Einzelheiten stehen im Versionsverlauf der App (Klick auf die Versionsnumme
 │   └── readme-screenshots.mjs Screenshots für diese README
 ├── docs/screenshots/
 ├── docker-compose.yml
+├── renovate.json              Abhängigkeits-Updates über die gemeinsame Renovate-Config
 ├── ts-serve.json              tailscale-serve-Konfiguration für den Sidecar
 ├── .env.example               Vorlage für den Tailscale-Auth-Key
 └── SECURITY.md                Sicherheitslücken vertraulich melden
