@@ -269,8 +269,7 @@ Die App hat eine eigene Versionsnummer mit Versionsverlauf. Für ein sichtbares 
 1. In `frontend/src/changelog.js` oben einen Eintrag ergänzen und `APP_VERSION` hochzählen.
 2. Dieselbe Version in `frontend/package.json` und `backend/package.json` eintragen.
 3. In dieser README die Tabelle unten und die Versionszeile unter den Screenshots anpassen.
-4. Nach dem Merge auf `main` einen Tag setzen und daraus ein GitHub Release mit den Changelog-Punkten machen:
-   `git tag v1.2.3 && git push origin v1.2.3`, dann auf GitHub unter **Releases** den Tag auswählen.
+4. Per Pull Request auf `main` mergen. Sobald die CI grün ist, legt `.github/workflows/release.yml` automatisch den Tag `vX.Y.Z` und ein GitHub Release mit den Punkten aus `changelog.js` an. Bricht der Lauf ab, passen meist die Versionen in den beiden `package.json` nicht zusammen oder der Changelog-Eintrag fehlt.
 5. Deployen: `git pull && docker compose up -d --build backend frontend`
 
 Installierte Apps erkennen die neue Version beim Öffnen, beim Zurückholen in den Vordergrund und stündlich, und zeigen dann „Update verfügbar“. Reine Server-Änderungen ohne neues Frontend lösen keinen Hinweis aus.
