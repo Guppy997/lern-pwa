@@ -1,0 +1,56 @@
+name: Fehler melden
+description: Etwas in der Lern-PWA funktioniert nicht so, wie es soll.
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke fürs Melden. Screenshots bitte nur mit Demo-Daten (`scripts/seed-demo.mjs`),
+        nicht mit deinen echten Einträgen. **Sicherheitslücken bitte nicht hier**, sondern
+        vertraulich wie in SECURITY.md beschrieben.
+
+  - type: textarea
+    id: was
+    attributes:
+      label: Was ist passiert?
+      description: Kurz und konkret. Fehlermeldungen gern als Text einfügen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: erwartet
+    attributes:
+      label: Was hast du erwartet?
+    validations:
+      required: true
+
+  - type: textarea
+    id: schritte
+    attributes:
+      label: Wie lässt sich das nachstellen?
+      placeholder: z. B. Projekt anlegen, Session starten, Timer auf 52/17 stellen …
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Steht in der App am Seitenende.
+      placeholder: z. B. 1.6.2
+
+  - type: input
+    id: geraet
+    attributes:
+      label: Gerät und Browser
+      placeholder: z. B. iPhone, Safari, als PWA installiert
+
+  - type: checkboxes
+    id: check
+    attributes:
+      label: Kurz geprüft
+      options:
+        - label: Ich habe nach einem bestehenden Issue zum selben Fehler gesucht.
+          required: true
+        - label: Das ist keine Sicherheitslücke (sonst bitte vertraulich melden).
+          required: true
