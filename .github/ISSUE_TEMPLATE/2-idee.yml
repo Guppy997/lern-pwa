@@ -1,0 +1,24 @@
+name: Idee vorschlagen
+description: Eine neue Funktion oder eine Verbesserung für die Lern-PWA.
+labels: ['enhancement']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Was fehlt dir?
+      description: Beschreib die Situation, nicht gleich die Lösung.
+    validations:
+      required: true
+
+  - type: textarea
+    id: idee
+    attributes:
+      label: Deine Idee
+      description: Wie könnte es aussehen oder funktionieren? Skizzen sind willkommen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternativen
+    attributes:
+      label: Was hast du stattdessen schon probiert?
