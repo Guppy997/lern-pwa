@@ -1,0 +1,64 @@
+name: Release
+
+# Legt automatisch Tag und GitHub Release an, sobald auf main eine Version
+# steht, die es noch nicht gibt. Läuft erst, wenn die CI für diesen Commit
+# grün ist. Version und Notizen kommen aus package.json und dem Changelog
+# der App, siehe .github/scripts/release-info.mjs.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  # Zum Nachholen von Hand: Actions, Release, Run workflow.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Nie zwei Releases gleichzeitig, sonst könnten beide denselben Tag anlegen.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    # Nur nach einem grünen CI-Lauf für einen Push auf main, nicht für PRs.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # nur dieser Job darf Tags und Releases anlegen
+    env:
+      SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ env.SHA }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+
+      - name: Version und Notizen lesen
+        id: info
+        run: node .github/scripts/release-info.mjs
+        env:
+          PACKAGES: backend/package.json frontend/package.json
+          CHANGELOG: frontend/src/changelog.js
+
+      - name: Release anlegen, falls die Version neu ist
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.info.outputs.version }}
+        run: |
+          if gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "v$VERSION gibt es schon, nichts zu tun."
+            exit 0
+          fi
+          gh release create "v$VERSION" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$SHA" \
+            --title "v$VERSION" \
+            --notes-file release-notes.md
+          echo "v$VERSION veröffentlicht."
