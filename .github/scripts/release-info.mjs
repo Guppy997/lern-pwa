@@ -14,8 +14,17 @@ import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+// GitHub Actions liest Log-Zeilen, die mit "::" beginnen, als Befehle
+// (::add-mask::, ::warning:: …). Darum gilt hier:
+// 1. Inhalte aus dem Changelog landen nur in release-notes.md, nie im Log.
+// 2. Fehlermeldungen werden wie von GitHub vorgegeben maskiert, damit ein
+//    Zeilenumbruch in einem Wert keine eigene Befehlszeile erzeugen kann.
+function escapeCommandData(text) {
+  return String(text).replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A');
+}
+
 function fail(message) {
-  console.error(`::error::${message}`);
+  console.error(`::error::${escapeCommandData(message)}`);
   process.exit(1);
 }
 
@@ -47,7 +56,8 @@ const notes = [
   '',
   '## Was ist neu',
   '',
-  ...punkte.map((p) => `- ${p}`),
+  // Ein Punkt bleibt ein Listenpunkt, auch wenn er Zeilenumbrüche enthält.
+  ...punkte.map((p) => `- ${String(p).replace(/\s*\r?\n\s*/g, ' ')}`),
   '',
 ]
   .filter((zeile) => zeile !== null)
@@ -55,4 +65,5 @@ const notes = [
 
 writeFileSync('release-notes.md', notes);
 if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\n`);
-console.log(`Version ${version}\n\n${notes}`);
+// Nur geprüfte Werte ins Log: die Version (reine SemVer) und eine Zahl.
+console.log(`Version ${version}, ${punkte.length} Punkte aus dem Changelog, Notizen in release-notes.md`);
